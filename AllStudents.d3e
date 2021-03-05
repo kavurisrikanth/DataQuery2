@@ -1,0 +1,5 @@
+(DataQuery AllStudents {
+    query `
+        Student.all
+    `
+})

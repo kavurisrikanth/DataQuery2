@@ -1,0 +1,9 @@
+(Model Student {
+    properties [
+        (name {
+            type ({
+                primitive String
+            })
+        })
+    ]
+})

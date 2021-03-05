@@ -1,0 +1,8 @@
+(Project DataQuery2 {
+    name 'DataQuery2'
+    package 'DataQuery2'
+    domain 'DataQuery2'
+    targets [
+        JavaBackEnd
+    ]
+})
