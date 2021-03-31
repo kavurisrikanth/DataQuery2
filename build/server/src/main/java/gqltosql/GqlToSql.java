@@ -13,7 +13,9 @@ import org.json.JSONObject;
 
 import d3e.core.SetExt;
 import gqltosql.schema.DField;
+import gqltosql.schema.DFlatField;
 import gqltosql.schema.DModel;
+import gqltosql.schema.DModelType;
 import gqltosql.schema.IModelSchema;
 import graphql.language.Field;
 import graphql.language.FragmentSpread;
@@ -56,15 +58,20 @@ public class GqlToSql {
 		return null;
 	}
 
-	public JSONArray execute(String parentType, Field field, Set<Long> ids) throws Exception {
-		SqlAstNode sqlNode = prepareSqlNode(field.getSelectionSet().getSelections(), parentType);
-		JSONArray result = sqlNode.executeQuery(em, ids, new HashMap<>());
-		return result;
+	public JSONArray execute(String parentType, Field field, Set<Long> ids) {
+		try {
+			SqlAstNode sqlNode = prepareSqlNode(field.getSelectionSet().getSelections(), parentType);
+			JSONArray result = sqlNode.executeQuery(em, ids, new HashMap<>());
+			return result;
+		} catch (Exception e) {
+			e.printStackTrace();
+			return new JSONArray();
+		}
 	}
 
 	private SqlAstNode prepareSqlNode(List<Selection> selections, String parentType) {
 		DModel<?> dm = schema.getType(parentType);
-		SqlAstNode node = new SqlAstNode("this", dm.getType(), dm.getTableName());
+		SqlAstNode node = new SqlAstNode(schema, "this", dm.getType(), dm.getTableName(), dm.isEmbedded());
 		addReferenceField(node, selections, dm);
 		return node;
 	}
@@ -75,6 +82,9 @@ public class GqlToSql {
 			return;
 		}
 		DField<?> df = parentType.getField(field.getName());
+		if (df == null) {
+			return;
+		}
 		switch (df.getType()) {
 		case Primitive:
 			addPrimitiveField(node, field, df);
@@ -88,6 +98,9 @@ public class GqlToSql {
 		case ReferenceCollection:
 			addReferenceCollectionField(node, field, df);
 			break;
+		case InverseCollection:
+			addInverseCollectionField(node, field, df);
+			break;
 		default:
 			break;
 		}
@@ -95,28 +108,48 @@ public class GqlToSql {
 
 	private void addPrimitiveCollectionField(SqlAstNode node, Field field, DField<?> df) {
 		DModel<?> dcl = df.declType();
-		SqlAstNode sub = new SqlPrimitiveCollAstNode(node.getPath() + "." + field.getName(),
+		SqlAstNode sub = new SqlPrimitiveCollAstNode(schema, node.getPath() + "." + field.getName(),
 				df.getCollTableName(dcl.getTableName()),
-				dcl.getTableName() + (schema.hasParent(dcl.getType()) ? "_" : "") + "_id", df.getColumnName(),
-				field.getName());
+				dcl.getTableName() + (dcl.getParent() != null ? "_" : "") + "_id", df.getColumnName(), field.getName());
 		addColumn(node, df, new CollSqlColumn(sub, field.getName()));
 	}
 
 	private void addReferenceCollectionField(SqlAstNode node, Field field, DField<?> df) {
-		DModel<?> dcl = df.declType();
 		DModel<?> dm = df.getReference();
-		SqlCollAstNode sub = new SqlCollAstNode(node.getPath() + "." + field.getName(), dm.getType(), dm.getTableName(),
-				df.getCollTableName(dcl.getTableName()),
-				dcl.getTableName() + (schema.hasParent(dcl.getType()) ? "_" : "") + "_id", df.getColumnName());
-		addReferenceField(sub, field.getSelectionSet().getSelections(), df.getReference());
-		addColumn(node, df, new RefCollSqlColumn(sub, field.getName()));
+		if (dm.getModelType() == DModelType.DOCUMENT) {
+			addColumn(node, df, new DocumentFlatSqlColumn(field, (DFlatField<?, ?>) df));
+		} else if (dm.getModelType() == DModelType.ENTITY || dm.getModelType() == DModelType.EMBEDDED) {
+			DModel<?> dcl = df.declType();
+			SqlCollAstNode sub = new SqlCollAstNode(schema, node.getPath() + "." + field.getName(), dm.getType(),
+					dm.getTableName(), df.getCollTableName(dcl.getTableName()),
+					dcl.getTableName() + (dcl.getParent() != null ? "_" : "") + "_id", df.getColumnName());
+			addReferenceField(sub, field.getSelectionSet().getSelections(), df.getReference());
+			addColumn(node, df, new RefCollSqlColumn(sub, field.getName()));
+		}
+	}
+
+	private void addInverseCollectionField(SqlAstNode node, Field field, DField<?> df) {
+		DModel<?> dm = df.getReference();
+		if (dm.getModelType() == DModelType.DOCUMENT) {
+			addColumn(node, df, new DocumentFlatSqlColumn(field, (DFlatField<?, ?>) df));
+		} else if (dm.getModelType() == DModelType.ENTITY || dm.getModelType() == DModelType.EMBEDDED) {
+			SqlInverseCollAstNode sub = new SqlInverseCollAstNode(schema, node.getPath() + "." + field.getName(),
+					dm.getType(), dm.getTableName(), df.getColumnName());
+			addReferenceField(sub, field.getSelectionSet().getSelections(), df.getReference());
+			addColumn(node, df, new RefCollSqlColumn(sub, field.getName()));
+		}
 	}
 
 	private void addReferenceField(SqlAstNode node, Field field, DField<?> df) {
 		DModel<?> dm = df.getReference();
-		SqlAstNode sub = new SqlAstNode(node.getPath() + "." + field.getName(), dm.getType(), dm.getTableName());
-		addReferenceField(sub, field.getSelectionSet().getSelections(), df.getReference());
-		addColumn(node, df, new RefSqlColumn(sub, df.getColumnName(), field.getName()));
+		if (dm.getModelType() == DModelType.DOCUMENT) {
+			addColumn(node, df, new DocumentSqlColumn(field, df));
+		} else if (dm.getModelType() == DModelType.ENTITY || dm.getModelType() == DModelType.EMBEDDED) {
+			SqlAstNode sub = new SqlAstNode(schema, node.getPath() + "." + field.getName(), dm.getType(),
+					dm.getTableName(), dm.isEmbedded());
+			addReferenceField(sub, field.getSelectionSet().getSelections(), df.getReference());
+			addColumn(node, df, new RefSqlColumn(sub, df.getColumnName(), field.getName()));
+		}
 	}
 
 	private void addColumn(SqlAstNode node, DField<?> df, ISqlColumn column) {

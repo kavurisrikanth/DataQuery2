@@ -15,12 +15,8 @@ public class SMSMessage extends D3EMessage {
     return this.old;
   }
 
-  public void setOld(SMSMessage old) {
-    this.old = old;
-  }
-
-  public void setOld(CloneContext ctx) {
-    this.setOld(ctx.getFromCache(this));
+  public void setOld(DatabaseObject old) {
+    this.old = ((SMSMessage) old);
   }
 
   @Override

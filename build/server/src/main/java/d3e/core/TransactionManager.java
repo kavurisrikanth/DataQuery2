@@ -54,24 +54,24 @@ public class TransactionManager {
 	}
 
 	public void commit(Consumer<DataStoreEvent> onEvent) {
-		added.forEach(a -> {
+		new ArrayList<>(added).forEach(a -> {
 			DataStoreEvent event = new DataStoreEvent(a);
 			event.setEntity(a);
-			event.setType(StoreEventType.INSERT);
+			event.setType(StoreEventType.Insert);
 			onEvent.accept(event);
 		});
 
-		updated.forEach(a -> {
+		new ArrayList<>(updated).forEach(a -> {
 			DataStoreEvent event = new DataStoreEvent(a);
 			event.setEntity(a);
-			event.setType(StoreEventType.UPDATE);
+			event.setType(StoreEventType.Update);
 			onEvent.accept(event);
 		});
 
-		deleted.forEach(a -> {
+		new ArrayList<>(deleted).forEach(a -> {
 			DataStoreEvent event = new DataStoreEvent(a);
 			event.setEntity(a);
-			event.setType(StoreEventType.DELETE);
+			event.setType(StoreEventType.Delete);
 			onEvent.accept(event);
 		});
 	}

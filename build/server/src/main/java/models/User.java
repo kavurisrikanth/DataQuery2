@@ -62,4 +62,9 @@ public abstract class User extends CreatableObject {
   public String toString() {
     return displayName();
   }
+
+  @Override
+  public boolean _isEntity() {
+    return true;
+  }
 }

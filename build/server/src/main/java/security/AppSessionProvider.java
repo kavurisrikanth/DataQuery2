@@ -40,7 +40,7 @@ public class AppSessionProvider {
     setToken(token);
   }
 
-  private void setToken(String token) {
+  public void setToken(String token) {
     if (token == null) {
       return;
     }

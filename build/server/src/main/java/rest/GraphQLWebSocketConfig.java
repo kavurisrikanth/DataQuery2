@@ -1,7 +1,11 @@
 package rest;
 
+import java.util.Arrays;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
+import java.util.Timer;
+import java.util.TimerTask;
 
 import org.json.JSONObject;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -10,18 +14,20 @@ import org.springframework.boot.task.TaskSchedulerBuilder;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.scheduling.concurrent.ThreadPoolTaskScheduler;
-import org.springframework.security.core.Authentication;
-import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.web.socket.CloseStatus;
+import org.springframework.web.socket.SubProtocolCapable;
 import org.springframework.web.socket.TextMessage;
 import org.springframework.web.socket.WebSocketSession;
+import org.springframework.web.socket.adapter.standard.StandardWebSocketSession;
 import org.springframework.web.socket.config.annotation.EnableWebSocket;
 import org.springframework.web.socket.config.annotation.WebSocketConfigurer;
 import org.springframework.web.socket.config.annotation.WebSocketHandlerRegistry;
 import org.springframework.web.socket.handler.TextWebSocketHandler;
 
+import d3e.core.D3ELogger;
 import io.reactivex.rxjava3.core.Flowable;
 import io.reactivex.rxjava3.disposables.Disposable;
+import security.AppSessionProvider;
 
 @Configuration
 @EnableWebSocket
@@ -33,18 +39,25 @@ public class GraphQLWebSocketConfig implements WebSocketConfigurer {
 	@Autowired
 	private NativeSubscription subscription;
 
+	@Autowired
+	private AppSessionProvider appProvider;
+
 	private Map<String, GraphQLSession> subscriptions = new HashMap<>();
-	
+
+	private Timer timer = new Timer();
+
 	@Bean
 	public ThreadPoolTaskScheduler taskScheduler(TaskSchedulerBuilder builder) {
-	    return builder.build();
+		return builder.build();
 	}
 
 	public void registerWebSocketHandlers(WebSocketHandlerRegistry registry) {
 		registry.addHandler(new TextWebSocketHandlerImpl(), subscriptionPath).setAllowedOrigins("*");
 	}
 
-	private class TextWebSocketHandlerImpl extends TextWebSocketHandler {
+	private class TextWebSocketHandlerImpl extends TextWebSocketHandler implements SubProtocolCapable {
+
+		private List<String> subProtocals = Arrays.asList("graphql-ws");
 
 		private StringBuilder partialPayload = new StringBuilder();
 
@@ -55,7 +68,14 @@ public class GraphQLWebSocketConfig implements WebSocketConfigurer {
 
 		@Override
 		public void afterConnectionEstablished(WebSocketSession session) throws Exception {
-			subscriptions.put(session.getId(), new GraphQLSession(session));
+			StandardWebSocketSession sss = (StandardWebSocketSession) session;
+			Map<String, List<String>> requestParameterMap = sss.getNativeSession().getRequestParameterMap();
+			List<String> values = requestParameterMap.get("token");
+			String token = null;
+			if (values != null && !values.isEmpty()) {
+				token = values.get(0);
+			}
+			subscriptions.put(session.getId(), new GraphQLSession(session, token));
 			super.afterConnectionEstablished(session);
 		}
 
@@ -76,39 +96,58 @@ public class GraphQLWebSocketConfig implements WebSocketConfigurer {
 				return;
 			}
 			GraphQLSession gql = subscriptions.get(session.getId());
-			JSONObject json = new JSONObject(partialPayload.toString());
-			partialPayload = new StringBuilder();
-			if (json.has("id")) {
-				String id = json.getString("id");
-				try {
+			String msg = partialPayload.toString();
+			try {
+				JSONObject json = new JSONObject(msg);
+				partialPayload = new StringBuilder();
+				if (json.has("id")) {
+					String id = json.getString("id");
+					try {
+						if (json.has("type")) {
+							String type = json.getString("type");
+							if ("start".equals(type)) {
+								D3ELogger.info("Subscription Start: " + id);
+								if (json.has("payload")) {
+									if (gql.containsKey(id)) {
+										gql.sendError(id, "Duplicate id found: " + id);
+									} else {
+										gql.subscribe(id, json.getJSONObject("payload"));
+									}
+								} else {
+									gql.sendError(id, "Payload not present");
+								}
+							} else if ("stop".equals(type)) {
+								D3ELogger.info("Subscription Stop: " + id);
+								gql.dispose(id);
+							} else {
+								gql.sendError(id, "Type not supported: " + type);
+							}
+						} else {
+							gql.sendError(id, "Type not present");
+						}
+					} catch (Exception e) {
+						e.printStackTrace();
+						gql.sendError(id, e.getMessage());
+					}
+				} else {
 					if (json.has("type")) {
 						String type = json.getString("type");
-						if ("start".equals(type)) {
-							if (json.has("payload")) {
-								if (gql.containsKey(id)) {
-									gql.sendError(id, "Duplicate id found: " + id);
-								} else {
-									Flowable<JSONObject> flowable = subscription
-											.subscribe(json.getJSONObject("payload"));
-									gql.subscribe(id, flowable);
-								}
-							} else {
-								gql.sendError(id, "Payload not present");
-							}
-						} else if ("stop".equals(type)) {
-							gql.dispose(id);
-						} else {
-							gql.sendError(id, "Type not supported: " + type);
+						if (type.equals("connection_init")) {
+							session.sendMessage(new TextMessage("{\"type\":\"connection_ack\"}"));
 						}
 					} else {
-						gql.sendError(id, "Type not present");
+						gql.sendError(null, "Id not present");
 					}
-				} catch (Exception e) {
-					gql.sendError(id, e.getMessage());
 				}
-			} else {
-				gql.sendError(null, "Id not present");
+			} catch (Exception e) {
+				D3ELogger.info("Got Exception: " + msg);
+				e.printStackTrace();
 			}
+		}
+
+		@Override
+		public List<String> getSubProtocols() {
+			return subProtocals;
 		}
 	}
 
@@ -117,16 +156,24 @@ public class GraphQLWebSocketConfig implements WebSocketConfigurer {
 		private WebSocketSession session;
 
 		private Map<String, Disposable> subscriptions = new HashMap<>();
-		private Authentication auth;
+		private TimerTask ka;
 
-		public GraphQLSession(WebSocketSession session) {
+		private String token;
+
+		public GraphQLSession(WebSocketSession session, String token) {
 			this.session = session;
-			this.auth = SecurityContextHolder.getContext().getAuthentication();
+			this.token = token;
+			rescheduleHeartBeat();
 		}
 
-		public void subscribe(String id, Flowable<JSONObject> flowable) {
-			SecurityContextHolder.getContext().setAuthentication(auth);
-			Disposable disposable = flowable.subscribe(m -> send(id, m), t -> sendError(id, t.getMessage()));
+		public void subscribe(String id, JSONObject payload) throws Exception {
+			appProvider.setToken(token);
+			Flowable<JSONObject> flowable = subscription.subscribe(payload);
+			Disposable disposable = flowable.subscribe(m -> send(id, m), t -> {
+				D3ELogger.info("SubscriptionException: " + id);
+				t.printStackTrace();
+				sendError(id, t.getMessage());
+			});
 			subscriptions.put(id, disposable);
 		}
 
@@ -160,6 +207,26 @@ public class GraphQLWebSocketConfig implements WebSocketConfigurer {
 			}
 		}
 
+		private void rescheduleHeartBeat() {
+			if (ka != null) {
+				ka.cancel();
+			}
+			TimerTask ka = new TimerTask() {
+
+				@Override
+				public void run() {
+					try {
+						if (session.isOpen()) {
+							session.sendMessage(new TextMessage("{\"type\":\"ka\"}"));
+						}
+					} catch (Exception e) {
+					}
+				}
+			};
+			timer.schedule(ka, 15_000, 15_000);
+			this.ka = ka;
+		}
+
 		public void dispose(String id) {
 			Disposable disposable = subscriptions.remove(id);
 			if (disposable != null) {
@@ -173,6 +240,9 @@ public class GraphQLWebSocketConfig implements WebSocketConfigurer {
 
 		public void close() {
 			subscriptions.values().forEach(d -> d.dispose());
+			if (ka != null) {
+				ka.cancel();
+			}
 		}
 	}
 }

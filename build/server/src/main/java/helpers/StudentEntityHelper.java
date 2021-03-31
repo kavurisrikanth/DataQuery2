@@ -5,6 +5,7 @@ import models.Student;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import repository.jpa.StudentRepository;
+import rest.GraphQLInputContext;
 import store.EntityHelper;
 import store.EntityMutator;
 import store.EntityValidationContext;
@@ -41,6 +42,14 @@ public class StudentEntityHelper<T extends Student, I extends StudentEntityInput
     }
     entity.updateMasters((o) -> {});
     return entity;
+  }
+
+  @Override
+  public void fromInput(T entity, GraphQLInputContext ctx) {
+    if (ctx.has("name")) {
+      entity.setName(ctx.readString("name"));
+    }
+    entity.updateMasters((o) -> {});
   }
 
   public StudentEntityInput toInput(T entity) {

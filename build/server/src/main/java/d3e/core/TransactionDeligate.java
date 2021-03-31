@@ -3,9 +3,9 @@ package d3e.core;
 import java.io.IOException;
 
 import javax.servlet.ServletException;
-import javax.transaction.Transactional;
 
 import org.springframework.stereotype.Component;
+import org.springframework.transaction.annotation.Transactional;
 
 @Component
 public class TransactionDeligate {
@@ -16,6 +16,11 @@ public class TransactionDeligate {
 
 	@Transactional
 	public void run(ToRun run) throws ServletException, IOException {
+		run.run();
+	}
+
+	@Transactional(readOnly = true)
+	public void readOnly(ToRun run) throws ServletException, IOException {
 		run.run();
 	}
 }

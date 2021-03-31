@@ -8,6 +8,7 @@ import models.D3EImage;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import repository.jpa.AvatarRepository;
+import rest.GraphQLInputContext;
 import store.EntityHelper;
 import store.EntityMutator;
 import store.EntityValidationContext;
@@ -47,6 +48,16 @@ public class AvatarEntityHelper<T extends Avatar, I extends AvatarEntityInput>
       entity.setCreateFrom(input.createFrom);
     }
     return entity;
+  }
+
+  @Override
+  public void fromInput(T entity, GraphQLInputContext ctx) {
+    if (ctx.has("image")) {
+      entity.setImage(ctx.readEmbedded("image", "D3EImage", entity.getImage()));
+    }
+    if (ctx.has("createFrom")) {
+      entity.setCreateFrom(ctx.readString("createFrom"));
+    }
   }
 
   public AvatarEntityInput toInput(T entity) {

@@ -1,13 +1,16 @@
 package gqltosql;
 
+import gqltosql.schema.IModelSchema;
+
 public class SqlPrimitiveCollAstNode extends SqlAstNode {
 	private String collTable;
 	private String idColumn;
 	private String column;
 	private String field;
 
-	public SqlPrimitiveCollAstNode(String path, String collTable, String idColumn, String column, String field) {
-		super(path, null, null);
+	public SqlPrimitiveCollAstNode(IModelSchema schema, String path, String collTable, String idColumn, String column,
+			String field) {
+		super(schema, path, null, null, false);
 		this.collTable = collTable;
 		this.idColumn = idColumn;
 		this.column = column;

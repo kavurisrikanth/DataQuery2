@@ -7,6 +7,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import repository.jpa.AvatarRepository;
 import repository.jpa.DFileRepository;
+import rest.GraphQLInputContext;
 import store.EntityHelper;
 import store.EntityMutator;
 import store.EntityValidationContext;
@@ -55,6 +56,22 @@ public class D3EImageEntityHelper<T extends D3EImage, I extends D3EImageEntityIn
       entity.setFile(existing);
     }
     return entity;
+  }
+
+  @Override
+  public void fromInput(T entity, GraphQLInputContext ctx) {
+    if (ctx.has("size")) {
+      entity.setSize(ctx.readInteger("size"));
+    }
+    if (ctx.has("width")) {
+      entity.setWidth(ctx.readInteger("width"));
+    }
+    if (ctx.has("height")) {
+      entity.setHeight(ctx.readInteger("height"));
+    }
+    if (ctx.has("file")) {
+      entity.setFile(ctx.readDFile("file"));
+    }
   }
 
   public D3EImageEntityInput toInput(T entity) {

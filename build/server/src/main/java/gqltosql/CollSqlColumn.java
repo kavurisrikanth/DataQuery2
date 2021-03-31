@@ -1,10 +1,15 @@
 package gqltosql;
 
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
+
+import javax.persistence.EntityManager;
 
 import org.json.JSONArray;
 import org.json.JSONObject;
+
+import gqltosql.schema.IModelSchema;
 
 public class CollSqlColumn implements ISqlColumn {
 
@@ -22,7 +27,7 @@ public class CollSqlColumn implements ISqlColumn {
 	}
 
 	@Override
-	public void addColumn(SqlQueryContext ctx) {
+	public void addColumn(SqlTable table, SqlQueryContext ctx) {
 	}
 
 	@Override
@@ -33,6 +38,11 @@ public class CollSqlColumn implements ISqlColumn {
 	@Override
 	public SqlAstNode getSubQuery() {
 		return sub;
+	}
+
+	@Override
+	public void extractDeepFields(EntityManager em, IModelSchema schema, String type, List<SqlRow> rows)
+			throws Exception {
 	}
 
 	@Override

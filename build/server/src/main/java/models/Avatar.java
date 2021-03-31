@@ -92,4 +92,9 @@ public class Avatar extends DatabaseObject {
     super.collectCreatableReferences(_refs);
     _refs.add(this.image.getFile());
   }
+
+  @Override
+  public boolean _isEntity() {
+    return true;
+  }
 }

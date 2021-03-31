@@ -1,16 +1,16 @@
 package gqltosql.schema;
 
-import java.util.List;
+import java.util.Collection;
 import java.util.function.Function;
 
 import graphql.language.Field;
 
 public class DRefCollField<T> extends DField<T> {
 
-	private Function<T, List<?>> getter;
+	private Function<T, Collection<?>> getter;
 
 	public DRefCollField(DModel<T> decl, String name, String column, String collTable, DModel<?> ref,
-			Function<T, List<?>> getter) {
+			Function<T, Collection<?>> getter) {
 		super(decl, name, column);
 		setCollTable(collTable);
 		setRef(ref);

@@ -7,6 +7,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import repository.jpa.OneTimePasswordRepository;
 import repository.jpa.UserRepository;
+import rest.GraphQLInputContext;
 import store.EntityHelper;
 import store.EntityMutator;
 import store.EntityValidationContext;
@@ -35,6 +36,14 @@ public class UserEntityHelper<T extends User, I extends UserEntityInput>
     }
     entity.updateMasters((o) -> {});
     return entity;
+  }
+
+  @Override
+  public void fromInput(T entity, GraphQLInputContext ctx) {
+    if (ctx.has("isActive")) {
+      entity.setIsActive(ctx.readBoolean("isActive"));
+    }
+    entity.updateMasters((o) -> {});
   }
 
   public UserEntityInput toInput(T entity) {

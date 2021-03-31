@@ -1,8 +1,13 @@
 package gqltosql;
 
+import java.util.List;
 import java.util.Map;
 
+import javax.persistence.EntityManager;
+
 import org.json.JSONArray;
+
+import gqltosql.schema.IModelSchema;
 
 public class SqlColumn implements ISqlColumn {
 
@@ -15,7 +20,7 @@ public class SqlColumn implements ISqlColumn {
 	}
 
 	@Override
-	public void addColumn(SqlQueryContext ctx) {
+	public void addColumn(SqlTable table, SqlQueryContext ctx) {
 		ctx.addSelection(ctx.getFrom() + '.' + column, field);
 	}
 
@@ -30,8 +35,13 @@ public class SqlColumn implements ISqlColumn {
 	}
 
 	@Override
-	public SqlCollAstNode getSubQuery() {
+	public SqlAstNode getSubQuery() {
 		return null;
+	}
+
+	@Override
+	public void extractDeepFields(EntityManager em, IModelSchema schema, String type, List<SqlRow> rows)
+			throws Exception {
 	}
 
 	@Override

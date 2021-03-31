@@ -13,8 +13,8 @@ public class SqlQueryContext {
 	private String alias;
 	private Map<String, String> tableAliases;
 
-	public SqlQueryContext(SqlAstNode node, int id) {
-		this.query = new SqlQuery(new QueryReader(id));
+	public SqlQueryContext(SqlAstNode node, int index) {
+		this.query = new SqlQuery(new QueryReader(index));
 		this.reader = this.query.getReader();
 		this.typeReader = this.reader.getTypeReader("_coll");
 		this.ag = new AliasGenerator();
@@ -26,11 +26,18 @@ public class SqlQueryContext {
 	private void createAllTablesAliases(String prefix, SqlAstNode node) {
 		node.getTables().forEach((type, table) -> {
 			String localPrefix = prefix == null ? type : prefix + "." + type;
-			tableAliases.put(localPrefix, nextAlias());
+			String a = nextAlias();
+			tableAliases.put(localPrefix, a);
 			table.getColumns().forEach(c -> {
 				if (c instanceof RefSqlColumn) {
 					RefSqlColumn ref = (RefSqlColumn) c;
-					createAllTablesAliases(localPrefix + "." + c.getFieldName(), ref.getSub());
+					SqlAstNode sub = ref.getSub();
+					if (sub.isEmbedded()) {
+						String embededPrefix = localPrefix + "." + c.getFieldName() + "." + sub.getType();
+						tableAliases.put(embededPrefix, a);
+					} else {
+						createAllTablesAliases(localPrefix + "." + c.getFieldName(), sub);
+					}
 				}
 			});
 		});
@@ -44,6 +51,10 @@ public class SqlQueryContext {
 		this.tableAliases = from.tableAliases;
 		this.alias = from.alias;
 		this.prefix = from.prefix;
+	}
+
+	public QueryTypeReader getTypeReader() {
+		return typeReader;
 	}
 
 	public void addSqlColumns(SqlAstNode node) {

@@ -31,12 +31,8 @@ public class Student extends CreatableObject {
     return this.old;
   }
 
-  public void setOld(Student old) {
-    this.old = old;
-  }
-
-  public void setOld(CloneContext ctx) {
-    this.setOld(ctx.getFromCache(this));
+  public void setOld(DatabaseObject old) {
+    this.old = ((Student) old);
   }
 
   public String displayName() {
@@ -70,5 +66,10 @@ public class Student extends CreatableObject {
 
   public Student createNewInstance() {
     return new Student();
+  }
+
+  @Override
+  public boolean _isEntity() {
+    return true;
   }
 }

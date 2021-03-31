@@ -35,15 +35,15 @@ public class Subscription implements GraphQLSubscriptionResolver {
 
   public ChangeEventType from(StoreEventType type) {
     switch (type) {
-      case INSERT:
+      case Insert:
         {
           return ChangeEventType.Insert;
         }
-      case UPDATE:
+      case Update:
         {
           return ChangeEventType.Update;
         }
-      case DELETE:
+      case Delete:
         {
           return ChangeEventType.Delete;
         }

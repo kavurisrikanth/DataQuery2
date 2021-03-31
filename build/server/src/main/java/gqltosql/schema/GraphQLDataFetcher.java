@@ -1,5 +1,6 @@
 package gqltosql.schema;
 
+import java.util.Collection;
 import java.util.List;
 import java.util.function.Function;
 
@@ -12,17 +13,24 @@ import graphql.language.InlineFragment;
 import graphql.language.Selection;
 import graphql.language.SelectionSet;
 import graphql.language.TypeName;
+import store.DatabaseObject;
 
-public class GrpahQLDataFetcher implements IDataFetcher {
+public class GraphQLDataFetcher implements IDataFetcher {
 
 	private IModelSchema schema;
 
-	public GrpahQLDataFetcher(IModelSchema schema) {
+	public GraphQLDataFetcher(IModelSchema schema) {
 		this.schema = schema;
 	}
 
 	public Object fetch(Field field, String type, Object value) {
 		return fetchReference(field, schema.getType(type), value);
+	}
+
+	public JSONArray fetchList(Field field, String type, List<?> value) {
+		JSONArray array = new JSONArray();
+		value.forEach(v -> array.put(fetch(field, type, v)));
+		return array;
 	}
 
 	@Override
@@ -34,7 +42,7 @@ public class GrpahQLDataFetcher implements IDataFetcher {
 	}
 
 	@Override
-	public <T, R> Object fetchCollection(List<T> value, Function<T, R> fetcher) {
+	public <T, R> Object fetchCollection(Collection<T> value, Function<T, R> fetcher) {
 		JSONArray array = new JSONArray();
 		value.forEach(v -> array.put(fetcher.apply(v)));
 		return array;
@@ -45,7 +53,7 @@ public class GrpahQLDataFetcher implements IDataFetcher {
 		if (value == null) {
 			return JSONObject.NULL;
 		}
-		if(type == null) {
+		if (type == null) {
 			return value;
 		}
 		JSONObject res = new JSONObject();
@@ -63,7 +71,10 @@ public class GrpahQLDataFetcher implements IDataFetcher {
 					if (df != null) {
 						res.put(f.getName(), df.getValue(this, f, value));
 					} else if (f.getName().equals("__typename")) {
-						res.put("__typename", type.getTableName());
+						res.put("__typename", value.getClass().getSimpleName());
+					} else if (f.getName().equals("localId")) {
+						DatabaseObject db = (DatabaseObject) value;
+						res.put("localId", db.getLocalId());
 					}
 				} catch (JSONException e) {
 					throw new RuntimeException(e);
@@ -71,8 +82,10 @@ public class GrpahQLDataFetcher implements IDataFetcher {
 			} else if (s instanceof InlineFragment) {
 				InlineFragment in = (InlineFragment) s;
 				TypeName typeName = in.getTypeCondition();
-				DModel<?> dm = schema.getType(typeName.getName());
-				fetchReferenceInternal(in.getSelectionSet(), res, dm, value);
+				if (value.getClass().getSimpleName().equals(typeName.getName())) {
+					DModel<?> dm = schema.getType(typeName.getName());
+					fetchReferenceInternal(in.getSelectionSet(), res, dm, value);
+				}
 			}
 		}
 	}

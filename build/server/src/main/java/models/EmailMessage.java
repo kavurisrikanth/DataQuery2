@@ -140,12 +140,8 @@ public class EmailMessage extends D3EMessage {
     return this.old;
   }
 
-  public void setOld(EmailMessage old) {
-    this.old = old;
-  }
-
-  public void setOld(CloneContext ctx) {
-    this.setOld(ctx.getFromCache(this));
+  public void setOld(DatabaseObject old) {
+    this.old = ((EmailMessage) old);
   }
 
   @Override

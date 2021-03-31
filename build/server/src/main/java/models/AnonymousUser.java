@@ -19,12 +19,8 @@ public class AnonymousUser extends User {
     return this.old;
   }
 
-  public void setOld(AnonymousUser old) {
-    this.old = old;
-  }
-
-  public void setOld(CloneContext ctx) {
-    this.setOld(ctx.getFromCache(this));
+  public void setOld(DatabaseObject old) {
+    this.old = ((AnonymousUser) old);
   }
 
   @Override
@@ -47,5 +43,10 @@ public class AnonymousUser extends User {
 
   public AnonymousUser createNewInstance() {
     return new AnonymousUser();
+  }
+
+  @Override
+  public boolean _isEntity() {
+    return true;
   }
 }

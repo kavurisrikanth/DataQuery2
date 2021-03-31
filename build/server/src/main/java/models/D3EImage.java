@@ -30,7 +30,6 @@ public class D3EImage implements ICloneable {
   private DFile file;
 
   private transient Avatar masterAvatar;
-  private transient D3EImage old;
 
   public DatabaseObject _masterObject() {
     if (masterAvatar != null) {
@@ -80,16 +79,6 @@ public class D3EImage implements ICloneable {
   public void setMasterAvatar(Avatar masterAvatar) {
     this.masterAvatar = masterAvatar;
   }
-
-  public D3EImage getOld() {
-    return this.old;
-  }
-
-  public void setOld(D3EImage old) {
-    this.old = old;
-  }
-
-  public void setOld(CloneContext ctx) {}
 
   public String displayName() {
     return "D3EImage";

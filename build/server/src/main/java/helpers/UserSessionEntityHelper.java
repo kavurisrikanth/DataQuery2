@@ -5,6 +5,7 @@ import models.UserSession;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import repository.jpa.UserSessionRepository;
+import rest.GraphQLInputContext;
 import store.EntityHelper;
 import store.EntityMutator;
 import store.EntityValidationContext;
@@ -32,6 +33,14 @@ public class UserSessionEntityHelper<T extends UserSession, I extends UserSessio
     }
     entity.updateMasters((o) -> {});
     return entity;
+  }
+
+  @Override
+  public void fromInput(T entity, GraphQLInputContext ctx) {
+    if (ctx.has("userSessionId")) {
+      entity.setUserSessionId(ctx.readString("userSessionId"));
+    }
+    entity.updateMasters((o) -> {});
   }
 
   public UserSessionEntityInput toInput(T entity) {

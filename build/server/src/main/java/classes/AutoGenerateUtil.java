@@ -1,75 +1,82 @@
 package classes;
 
+import java.util.Arrays;
 import java.util.List;
+import java.util.function.Function;
+import java.util.stream.Collectors;
 
 import org.apache.commons.lang.StringUtils;
 
 import d3e.core.IntegerExt;
-import d3e.core.IterableExt;
 import d3e.core.ListExt;
 import d3e.core.StringExt;
 
 public class AutoGenerateUtil {
-  private static String REPLACE_REGEX = "\\s+";
-  
-  private static enum CaseType {
-    None,
-    LowerCase,
-    UpperCase,
-    CamelCaseStartLower,
-    CamelCaseStartUpper;
-    
-    private static CaseType fromNumber(long x) {
-      int val = (int) x;
-      switch (val) {
-        case 0:
-          return None;
-        case 1:
-          return LowerCase;
-        case 2:
-          return UpperCase;
-        case 3:
-          return CamelCaseStartLower;
-        case 4:
-          return CamelCaseStartUpper;
-        default:
-          return null;
-      }
-    }
-  }
+  private static String REPLACE_REGEX = "\\W+";
 
   public AutoGenerateUtil() {}
 
-  public static String generateIdentity(String src, long caseType, String sanitizeWith, String prefix, String suffix) {
-    if (src == null) {
+  public static String generateIdentity(String src, String sanitizeWith, String prefix, String suffix) {
+    return generateIdentity(src, sanitizeWith, prefix, suffix, null);
+  }
+  
+  public static String generateIdentityLowerCase(String src, String sanitizeWith, String prefix, String suffix) {
+    return generateIdentity(src, sanitizeWith, prefix, suffix, str -> str.toLowerCase());
+  }
+  
+  public static String generateIdentityUpperCase(String src, String sanitizeWith, String prefix, String suffix) {
+    return generateIdentity(src, sanitizeWith, prefix, suffix, str -> str.toUpperCase());
+  }
+  
+  public static String generateIdentityCamelCaseStartLower(String src, String sanitizeWith, String prefix, String suffix) {
+    return StringUtils.uncapitalize(generateIdentityCamelCaseStartUpper(src, sanitizeWith, prefix, suffix));
+  }
+  
+  public static String generateIdentityCamelCaseStartUpper(String src, String sanitizeWith, String prefix, String suffix) {
+    if (src == null || sanitizeWith == null) {
       return null;
     }
-    if (prefix == null) {
-      prefix = "";
+    
+    String joined = join(prefix, suffix, src);
+    
+    return Arrays.stream(joined.split(REPLACE_REGEX)).map(s -> StringUtils.capitalize(s)).collect(Collectors.joining(sanitizeWith));
+  }
+  
+  /***
+   * Helper methods
+   */
+  
+  
+  private static String generateIdentity(String src, String sanitizeWith, String prefix, String suffix, Function<String, String> modResult) {
+    if (src == null || sanitizeWith == null) {
+      return null;
     }
-    if (suffix == null) {
-      suffix = "";
-    }
-    CaseType ct = CaseType.fromNumber(caseType);
-    sanitizeWith = AutoGenerateUtil._modifyString(sanitizeWith, ct);
-    List<String> modifiedPieces =
-        IterableExt.toList(
-            ListExt.map(
-                StringExt.split(src, AutoGenerateUtil.REPLACE_REGEX),
-                (str) -> {
-                  if (ct == CaseType.CamelCaseStartLower || ct == CaseType.CamelCaseStartUpper) {
-                    return AutoGenerateUtil._modifyString(str, CaseType.CamelCaseStartUpper);
-                  }
-                  return AutoGenerateUtil._modifyString(str, ct);
-                }),
-            false);
-    String modifiedStr = ListExt.join(modifiedPieces, sanitizeWith);
-    if (ct == CaseType.CamelCaseStartLower) {
-      modifiedStr = AutoGenerateUtil._caseFirstChar(modifiedStr, true);
-    }
-    return prefix + modifiedStr + suffix;
+    
+    String sanitized = sanitize(src, sanitizeWith);
+    
+    String sanitizedPrefix = sanitize(prefix, sanitizeWith);
+    
+    String sanitizedSuffix = sanitize(suffix, sanitizeWith);
+    
+    String joined = join(sanitizedPrefix, sanitizedSuffix, sanitized);
+
+    String modified = (modResult == null) ? joined : modResult.apply(joined);
+    
+    return modified;
+  }
+  
+  private static String sanitize(String src, String sanitizeWith) {
+    return src.replaceAll(REPLACE_REGEX, sanitizeWith);
   }
 
+  private static String join(String prefix, String suffix, String payload) {
+    StringBuilder sb = new StringBuilder();
+    sb.append(prefix);
+    sb.append(payload);
+    sb.append(suffix);
+    return sb.toString();
+  }
+  
   public static String generateNextSequenceString(
       long startsFrom, long step, String prefix, String suffix, String old) {
     if (prefix == null) {
@@ -97,7 +104,7 @@ public class AutoGenerateUtil {
   }
 
   public static String toName(String str) {
-    String[] pieces = unCamelCase(str);
+    String[] pieces = splitCamelCaseString(str);
     if (pieces.length > 0) {
       pieces[0] = StringUtils.capitalize(pieces[0]);
       for (int i = 1; i < pieces.length; i++) {
@@ -107,7 +114,7 @@ public class AutoGenerateUtil {
     return String.join(" ", pieces);
   }
   
-  private static String[] unCamelCase(String str) {
+  private static String[] splitCamelCaseString(String str) {
     int i = 0, len = str.length();
     int prevType = -1;
     StringBuilder sb = new StringBuilder();
@@ -130,27 +137,5 @@ public class AutoGenerateUtil {
       pieces.add(sb.toString());
     }
     return pieces.stream().toArray(String[]::new);
-  }
-
-  private static String _modifyString(String str, CaseType caseType) {
-    if (str == null || str.isEmpty()) {
-      return str;
-    }
-    switch (caseType) {
-      case CamelCaseStartLower:
-        return _caseFirstChar(str, true);
-      case CamelCaseStartUpper:
-        return _caseFirstChar(str, false);
-      case LowerCase:
-        return str.toLowerCase();
-      case UpperCase:
-        return str.toUpperCase();
-      default:
-        return str;
-    }
-  }
-  
-  private static String _caseFirstChar(String str, boolean lower) {
-    return lower ? StringUtils.uncapitalize(str) : StringUtils.capitalize(str);
   }
 }

@@ -8,6 +8,7 @@ import models.EmailMessage;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import repository.jpa.DFileRepository;
+import rest.GraphQLInputContext;
 import store.EntityValidationContext;
 import store.InputHelper;
 
@@ -85,6 +86,41 @@ public class EmailMessageEntityHelper<T extends EmailMessage, I extends EmailMes
     }
     entity.updateMasters((o) -> {});
     return entity;
+  }
+
+  @Override
+  public void fromInput(T entity, GraphQLInputContext ctx) {
+    if (ctx.has("from")) {
+      entity.setFrom(ctx.readString("from"));
+    }
+    if (ctx.has("to")) {
+      entity.setTo(ctx.readStringColl("to"));
+    }
+    if (ctx.has("body")) {
+      entity.setBody(ctx.readString("body"));
+    }
+    if (ctx.has("createdOn")) {
+      entity.setCreatedOn(ctx.readDateTime("createdOn"));
+    }
+    if (ctx.has("bcc")) {
+      entity.setBcc(ctx.readStringColl("bcc"));
+    }
+    if (ctx.has("cc")) {
+      entity.setCc(ctx.readStringColl("cc"));
+    }
+    if (ctx.has("subject")) {
+      entity.setSubject(ctx.readString("subject"));
+    }
+    if (ctx.has("html")) {
+      entity.setHtml(ctx.readBoolean("html"));
+    }
+    if (ctx.has("inlineAttachments")) {
+      entity.setInlineAttachments(ctx.readDFileColl("inlineAttachments"));
+    }
+    if (ctx.has("attachments")) {
+      entity.setAttachments(ctx.readDFileColl("attachments"));
+    }
+    entity.updateMasters((o) -> {});
   }
 
   public EmailMessageEntityInput toInput(T entity) {

@@ -1,17 +1,22 @@
 package gqltosql;
 
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
+
+import javax.persistence.EntityManager;
 
 import org.json.JSONArray;
 import org.json.JSONObject;
 
+import gqltosql.schema.IModelSchema;
+
 public class RefCollSqlColumn implements ISqlColumn {
 
-	private SqlCollAstNode sub;
+	private SqlAstNode sub;
 	private String field;
 
-	public RefCollSqlColumn(SqlCollAstNode sub, String field) {
+	public RefCollSqlColumn(SqlAstNode sub, String field) {
 		this.sub = sub;
 		this.field = field;
 	}
@@ -22,12 +27,17 @@ public class RefCollSqlColumn implements ISqlColumn {
 	}
 
 	@Override
-	public void addColumn(SqlQueryContext ctx) {
+	public void addColumn(SqlTable table, SqlQueryContext ctx) {
 	}
 
 	@Override
-	public SqlCollAstNode getSubQuery() {
+	public SqlAstNode getSubQuery() {
 		return sub;
+	}
+
+	@Override
+	public void extractDeepFields(EntityManager em, IModelSchema schema, String type, List<SqlRow> rows)
+			throws Exception {
 	}
 
 	@Override

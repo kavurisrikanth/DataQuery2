@@ -24,12 +24,12 @@ public class ValidationFailedException extends RuntimeException {
   }
 
   public ValidationFailedException(List<String> errors) {
-    super();
+    super(errors.toString());
     this.errors = errors;
   }
 
   public ValidationFailedException(MutateResultStatus status, List<String> errors) {
-    super();
+    super(errors.toString());
     this.errors = errors;
     this.status = status;
     this.statusProvided = true;

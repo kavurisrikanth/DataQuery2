@@ -5,6 +5,7 @@ import models.OneTimePassword;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import repository.jpa.OneTimePasswordRepository;
+import rest.GraphQLInputContext;
 import store.EntityHelper;
 import store.EntityMutator;
 import store.EntityValidationContext;
@@ -51,6 +52,23 @@ public class OneTimePasswordEntityHelper<
     }
     entity.updateMasters((o) -> {});
     return entity;
+  }
+
+  @Override
+  public void fromInput(T entity, GraphQLInputContext ctx) {
+    if (ctx.has("success")) {
+      entity.setSuccess(ctx.readBoolean("success"));
+    }
+    if (ctx.has("errorMsg")) {
+      entity.setErrorMsg(ctx.readString("errorMsg"));
+    }
+    if (ctx.has("token")) {
+      entity.setToken(ctx.readString("token"));
+    }
+    if (ctx.has("expiry")) {
+      entity.setExpiry(ctx.readDateTime("expiry"));
+    }
+    entity.updateMasters((o) -> {});
   }
 
   public OneTimePasswordEntityInput toInput(T entity) {

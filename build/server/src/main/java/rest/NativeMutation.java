@@ -1,12 +1,13 @@
 package rest;
 
 import classes.MutateResultStatus;
+import d3e.core.D3ELogger;
 import d3e.core.TransactionWrapper;
-import gqltosql.schema.GrpahQLDataFetcher;
+import gqltosql.schema.GraphQLDataFetcher;
 import gqltosql.schema.IModelSchema;
 import graphql.language.Field;
+import java.util.HashMap;
 import java.util.List;
-import java.util.Map;
 import java.util.Random;
 import org.json.JSONArray;
 import org.json.JSONException;
@@ -23,6 +24,7 @@ import repository.jpa.StudentRepository;
 import repository.jpa.UserRepository;
 import repository.jpa.UserSessionRepository;
 import security.AppSessionProvider;
+import store.EntityHelperService;
 import store.EntityMutator;
 import store.ValidationFailedException;
 
@@ -30,6 +32,7 @@ import store.ValidationFailedException;
 @RequestMapping("native/")
 public class NativeMutation extends AbstractQueryService {
   @Autowired private EntityMutator mutator;
+  @Autowired private ObjectFactory<EntityHelperService> helperService;
   @Autowired private TransactionWrapper transactionWrapper;
   @Autowired private IModelSchema schema;
   @Autowired private AnonymousUserRepository anonymousUserRepository;
@@ -42,10 +45,14 @@ public class NativeMutation extends AbstractQueryService {
   @PostMapping(path = "/mutate", produces = MediaType.APPLICATION_JSON_VALUE)
   public String run(@RequestBody String query) throws Exception {
     JSONObject req = new JSONObject(query);
-    List<Field> operations = parseOperations(req);
+    List<Field> fields = parseFields(req);
     JSONObject variables = req.getJSONObject("variables");
+    return executeFields(fields, variables);
+  }
+
+  public String executeFields(List<Field> fields, JSONObject variables) throws Exception {
     JSONObject data = new JSONObject();
-    for (Field s : operations) {
+    for (Field s : fields) {
       String name = s.getAlias() == null ? s.getName() : s.getAlias();
       transactionWrapper.doInTransaction(
           () -> {
@@ -73,7 +80,7 @@ public class NativeMutation extends AbstractQueryService {
     result.put("errors", new JSONArray());
     if (value != null) {
       result.put(
-          "value", new GrpahQLDataFetcher(schema).fetch(inspect(field, "value"), type, value));
+          "value", new GraphQLDataFetcher(schema).fetch(inspect(field, "value"), type, value));
     }
     return result;
   }
@@ -93,9 +100,17 @@ public class NativeMutation extends AbstractQueryService {
   }
 
   private Object executeOperation(Field field, JSONObject variables) throws Exception {
-    Map<String, Object> args = parseArguments(field.getArguments(), variables);
+    GraphQLInputContext ctx =
+        new ArgumentInputContext(
+            field.getArguments(),
+            helperService.getObject(),
+            new HashMap<>(),
+            new HashMap<>(),
+            variables);
+    D3ELogger.info("Mutation: " + field.getName());
     switch (field.getName()) {
     }
+    D3ELogger.info("Mutation Not found");
     return null;
   }
 

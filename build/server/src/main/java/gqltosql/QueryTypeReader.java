@@ -18,14 +18,16 @@ public class QueryTypeReader {
 		return type;
 	}
 
+	public int getId() {
+		return id;
+	}
+
 	public void read(Object[] row, SqlRow obj) throws Exception {
 		if (id != -1) {
 			BigInteger bid = ((BigInteger) row[id]);
 			if (bid == null) {
 				return;
 			}
-			Long _id = ((BigInteger) row[id]).longValue();
-			obj.put("id", _id);
 		}
 		obj.addType(type);
 		for (IValue f : fields) {
@@ -46,7 +48,7 @@ public class QueryTypeReader {
 		fields.add(rv);
 		return rv.getReader();
 	}
-	
+
 	@Override
 	public String toString() {
 		return type;

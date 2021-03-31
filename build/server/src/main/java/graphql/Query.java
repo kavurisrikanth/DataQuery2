@@ -66,6 +66,11 @@ public class Query implements GraphQLQueryResolver {
       loginResult.failureMessage = "Invalid token.";
       return loginResult;
     }
+    if (otp.getExpiry().isBefore(java.time.LocalDateTime.now())) {
+      loginResult.success = false;
+      loginResult.failureMessage = "OTP validity has expired.";
+      return loginResult;
+    }
     if (!(code.equals(otp.getCode()))) {
       loginResult.success = false;
       loginResult.failureMessage = "Invalid code.";

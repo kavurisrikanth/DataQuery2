@@ -93,12 +93,8 @@ public class OneTimePassword extends CreatableObject {
     return this.old;
   }
 
-  public void setOld(OneTimePassword old) {
-    this.old = old;
-  }
-
-  public void setOld(CloneContext ctx) {
-    this.setOld(ctx.getFromCache(this));
+  public void setOld(DatabaseObject old) {
+    this.old = ((OneTimePassword) old);
   }
 
   public String displayName() {
@@ -147,5 +143,10 @@ public class OneTimePassword extends CreatableObject {
   public void collectCreatableReferences(List<Object> _refs) {
     super.collectCreatableReferences(_refs);
     _refs.add(this.user);
+  }
+
+  @Override
+  public boolean _isEntity() {
+    return true;
   }
 }

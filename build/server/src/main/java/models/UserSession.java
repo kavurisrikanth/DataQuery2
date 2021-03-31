@@ -56,4 +56,9 @@ public abstract class UserSession extends CreatableObject {
     cloneObj.setUserSessionId(this.getUserSessionId());
     return cloneObj;
   }
+
+  @Override
+  public boolean _isEntity() {
+    return true;
+  }
 }

@@ -14,6 +14,7 @@ public class DataStoreEvent extends ApplicationEvent {
 	
 	public DataStoreEvent(Object source) {
 		super(source);
+		this.entity = source;
 	}
 
 	public StoreEventType getType() {

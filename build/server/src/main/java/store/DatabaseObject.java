@@ -166,7 +166,7 @@ public abstract class DatabaseObject  implements  DBObject, ICloneable {
 		db.setId(id);
 	}
 
-	public void setOld(CloneContext ctx) {
+	public void recordOld(CloneContext ctx) {
 	}
 
 	public DatabaseObject getOld() {
@@ -189,10 +189,10 @@ public abstract class DatabaseObject  implements  DBObject, ICloneable {
 		return false;
 	}
 	
-	protected void createOldObject() {
+	public void createOldObject() {
 	  CloneContext ctx = new CloneContext(true, true);
 	  ctx.startClone(this);
-	  setOld(ctx);
+	  recordOld(ctx);
 	}
 
 	@PostLoad
@@ -203,8 +203,25 @@ public abstract class DatabaseObject  implements  DBObject, ICloneable {
 	public boolean _creatable() {
 		return false;
 	}
+	
+	public void _markDirty() {
+		isDirty = true;
+		DatabaseObject master = _masterObject();
+		if(master != null) {
+			master._markDirty();
+		}
+	}
 
+	public void _clearDirty() {
+		isDirty = false;
+	}
+	
+	public boolean _isDirty() {
+		return isDirty;
+	}
+	
 	protected void onPropertySet() {
+		_markDirty();
 		if(canMarkDirty()) {
 			DatabaseObject obj = this;
 			do {
@@ -232,5 +249,9 @@ public abstract class DatabaseObject  implements  DBObject, ICloneable {
 	}
 
 	public void collectCreatableReferences(List<Object> _refs) {
+	}
+
+	public boolean _isEntity() {
+		return false;
 	}
 }

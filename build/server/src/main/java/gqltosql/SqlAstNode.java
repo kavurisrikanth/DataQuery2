@@ -4,7 +4,6 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.Objects;
 import java.util.Set;
 import java.util.function.Function;
 import java.util.stream.Stream;
@@ -17,6 +16,7 @@ import org.json.JSONException;
 import org.json.JSONObject;
 
 import gqltosql.schema.DModel;
+import gqltosql.schema.IModelSchema;
 
 public class SqlAstNode {
 
@@ -25,19 +25,27 @@ public class SqlAstNode {
 	private String table;
 	private boolean needType;
 	private String path;
+	private boolean embedded;
+	private IModelSchema schema;
 
-	public SqlAstNode(String path, String type, String table) {
+	public SqlAstNode(IModelSchema schema, String path, String type, String table, boolean embedded) {
+		this.schema = schema;
 		this.path = path;
 		this.type = type;
 		this.table = table;
-		tables.put(type, new SqlTable(type, table));
+		this.embedded = embedded;
+		tables.put(type, new SqlTable(type, table, embedded));
 	}
 
 	public SqlQueryContext createCtx() {
-		SqlQueryContext ctx = new SqlQueryContext(this, 0);
+		SqlQueryContext ctx = new SqlQueryContext(this, -1);
 		ctx.getQuery().setFrom(getTableName(), ctx.getFrom());
 		ctx.getQuery().addWhere(ctx.getFrom() + "._id in ?1");
 		return ctx;
+	}
+
+	public boolean isEmbedded() {
+		return embedded;
 	}
 
 	public void setNeedType(boolean needType) {
@@ -51,7 +59,7 @@ public class SqlAstNode {
 	public void addColumn(DModel<?> type, ISqlColumn column) {
 		SqlTable tbl = tables.get(type.getType());
 		if (tbl == null) {
-			tables.put(type.getType(), tbl = new SqlTable(type.getType(), type.getTableName()));
+			tables.put(type.getType(), tbl = new SqlTable(type.getType(), type.getTableName(), type.isEmbedded()));
 		}
 		tbl.addColumn(column);
 	}
@@ -81,8 +89,10 @@ public class SqlAstNode {
 		if (needType()) {
 			StringBuilder b = new StringBuilder();
 			b.append("(case");
-			getTables().forEach((t, f) -> b.append(" when ").append(ctx.getTableAlias(t))
-					.append("._id is not null then '").append(t).append('\''));
+			List<String> allTypes = new ArrayList<>(getTables().keySet());
+			sortTypes(allTypes);
+			allTypes.forEach((t) -> b.append(" when ").append(ctx.getTableAlias(t)).append("._id is not null then '")
+					.append(t).append('\''));
 			b.append("else 'no-type' end)");
 			ctx.addSelection(b.toString(), "__typename");
 		}
@@ -98,6 +108,24 @@ public class SqlAstNode {
 			sub.addJoin(table.getTableName(), join, join + "._id = " + typeCtx.getFrom() + "._id");
 			table.addSelections(sub);
 		});
+	}
+
+	private void sortTypes(List<String> types) {
+		Map<String, String> byType = new HashMap<>();
+		for (String type : types) {
+			DModel<?> dm = schema.getType(type);
+			String path = getPath(dm);
+			byType.put(type, path);
+		}
+		types.sort((a, b) -> byType.get(b).compareTo(byType.get(a)));
+	}
+
+	private String getPath(DModel<?> dm) {
+		if (dm == null) {
+			return "";
+		}
+		DModel<?> parent = dm.getParent();
+		return getPath(parent) + "." + dm.getType();
 	}
 
 	public JSONArray executeQuery(EntityManager em, Set<Long> ids, Map<Long, SqlRow> byId) throws Exception {
@@ -123,33 +151,22 @@ public class SqlAstNode {
 			list.add((SqlRow) obj);
 		}
 		if (!list.isEmpty()) {
-			executeSubQuery(em, (t) -> list.stream());
+			executeSubQuery(em, (t) -> list);
 		}
 		return result;
 	}
 
-	private void executeSubQuery(EntityManager em, Function<String, Stream<SqlRow>> listSupplier) throws Exception {
+	public void executeSubQuery(EntityManager em, Function<String, List<SqlRow>> listSupplier) throws Exception {
 		for (Map.Entry<String, SqlTable> e : tables.entrySet()) {
 			String type = e.getKey();
 			SqlTable table = e.getValue();
+			List<SqlRow> apply = listSupplier.apply(type);
 			for (ISqlColumn c : table.getColumns()) {
-				if (c instanceof RefSqlColumn) {
-					SqlAstNode sub = ((RefSqlColumn) c).getSub();
-					sub.executeSubQuery(em, (t) -> listSupplier.apply(type).map(o -> {
-						try {
-							SqlRow row = (SqlRow) o.getJSONObject(c.getFieldName());
-							return row.isOfType(t) ? row : null;
-						} catch (JSONException ex) {
-							return null;
-						}
-					}).filter(Objects::nonNull));
-					continue;
-				}
+				c.extractDeepFields(em, schema, type, apply);
 				SqlAstNode sub = c.getSubQuery();
 				if (sub != null) {
-					Stream<SqlRow> list = listSupplier.apply(type);
 					Map<Long, SqlRow> objById = new HashMap<>();
-					list.forEach(o -> {
+					apply.forEach(o -> {
 						try {
 							objById.put(o.getLong("id"), o);
 						} catch (JSONException ex) {

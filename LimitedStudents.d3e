@@ -1,5 +1,5 @@
 (DataQuery LimitedStudents {
     query `
-        Student.all
+        Student.all.take(10).toList()
     `
 })

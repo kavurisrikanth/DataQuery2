@@ -5,6 +5,7 @@ import models.AnonymousUser;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import repository.jpa.AnonymousUserRepository;
+import rest.GraphQLInputContext;
 import store.EntityValidationContext;
 import store.InputHelper;
 
@@ -34,6 +35,14 @@ public class AnonymousUserEntityHelper<T extends AnonymousUser, I extends Anonym
     }
     entity.updateMasters((o) -> {});
     return entity;
+  }
+
+  @Override
+  public void fromInput(T entity, GraphQLInputContext ctx) {
+    if (ctx.has("isActive")) {
+      entity.setIsActive(ctx.readBoolean("isActive"));
+    }
+    entity.updateMasters((o) -> {});
   }
 
   public AnonymousUserEntityInput toInput(T entity) {

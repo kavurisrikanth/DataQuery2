@@ -6,6 +6,7 @@ import java.util.stream.Collectors;
 import models.D3EMessage;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
+import rest.GraphQLInputContext;
 import store.EntityHelper;
 import store.EntityMutator;
 import store.EntityValidationContext;
@@ -41,6 +42,23 @@ public class D3EMessageEntityHelper<T extends D3EMessage, I extends D3EMessageEn
     }
     entity.updateMasters((o) -> {});
     return entity;
+  }
+
+  @Override
+  public void fromInput(T entity, GraphQLInputContext ctx) {
+    if (ctx.has("from")) {
+      entity.setFrom(ctx.readString("from"));
+    }
+    if (ctx.has("to")) {
+      entity.setTo(ctx.readStringColl("to"));
+    }
+    if (ctx.has("body")) {
+      entity.setBody(ctx.readString("body"));
+    }
+    if (ctx.has("createdOn")) {
+      entity.setCreatedOn(ctx.readDateTime("createdOn"));
+    }
+    entity.updateMasters((o) -> {});
   }
 
   public D3EMessageEntityInput toInput(T entity) {

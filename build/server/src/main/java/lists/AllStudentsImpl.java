@@ -1,5 +1,6 @@
 package lists;
 
+import classes.AllStudents;
 import gqltosql.GqlToSql;
 import gqltosql.SqlRow;
 import graphql.language.Field;
@@ -9,36 +10,41 @@ import javax.persistence.EntityManager;
 import javax.persistence.Query;
 import models.Student;
 import org.json.JSONArray;
+import org.json.JSONObject;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import rest.AbstractQueryService;
 
 @Service
-public class AllStudentsImpl {
+public class AllStudentsImpl extends AbsDataQueryImpl {
   @Autowired private EntityManager em;
+  @Autowired private GqlToSql gqlToSql;
 
-  public List<Student> get() {
+  public AllStudents get() {
     List<NativeObj> rows = getNativeResult();
     List<Student> result = new ArrayList<>();
     for (NativeObj _r1 : rows) {
       result.add(NativeSqlUtil.get(em, _r1.getRef(0), Student.class));
     }
-    return result;
+    AllStudents wrap = new AllStudents();
+    wrap.items = result;
+    return wrap;
   }
 
-  public JSONArray getAsJson(GqlToSql gqlToSql, Field field) throws Exception {
+  public JSONObject getAsJson(Field field) throws Exception {
     List<NativeObj> rows = getNativeResult();
-    return getAsJson(gqlToSql, field, rows);
+    return getAsJson(field, rows);
   }
 
-  public JSONArray getAsJson(GqlToSql gqlToSql, Field field, List<NativeObj> rows)
-      throws Exception {
-    JSONArray result = new JSONArray();
+  public JSONObject getAsJson(Field field, List<NativeObj> rows) throws Exception {
+    JSONArray array = new JSONArray();
     List<SqlRow> sqlDecl0 = new ArrayList<>();
     for (NativeObj _r1 : rows) {
-      result.put(NativeSqlUtil.getJSONObject(_r1.getRef(0), sqlDecl0));
+      array.put(NativeSqlUtil.getJSONObject(_r1, sqlDecl0));
     }
     gqlToSql.execute("Student", AbstractQueryService.inspect(field, ""), sqlDecl0);
+    JSONObject result = new JSONObject();
+    result.put("items", array);
     return result;
   }
 

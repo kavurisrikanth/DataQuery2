@@ -72,8 +72,6 @@ type Query
 	getOneTimePasswordById ( id: Long ) : OneTimePassword
 	checkTokenUniqueInOneTimePassword ( oneTimePasswordId: Long token: String ) : Boolean
 	getStudentById ( id: Long ) : Student
-	getAllStudents : [Student]
-	getLimitedStudents : [Student]
 	loginWithOTP ( token: String code: String ) : LoginResult
 }
 

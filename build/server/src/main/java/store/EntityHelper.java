@@ -4,6 +4,9 @@ import java.util.List;
 import java.util.Objects;
 import java.util.function.Supplier;
 
+import rest.GraphQLInputContext;
+import rest.IDocumentReader;
+
 public interface EntityHelper<T extends Object, I extends IEntityInput> {
 
 	void setDefaults(T entity);
@@ -25,6 +28,10 @@ public interface EntityHelper<T extends Object, I extends IEntityInput> {
 	T fromInput(I input, InputHelper helper);
 
 	T fromInput(I input, T entity, InputHelper helper);
+	
+	void fromInput(T entity, GraphQLInputContext ctx);
+	
+	default void toJson(T entity, IDocumentReader r) {}
 
 	T getById(long input);
 	

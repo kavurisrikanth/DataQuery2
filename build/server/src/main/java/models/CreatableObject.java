@@ -88,10 +88,11 @@ public abstract class CreatableObject extends DatabaseObject {
     return null;
   }
 
-  public void setOld(CreatableObject old) {
+  public void setOld(DatabaseObject old) {
   }
 
-  public void setOld(CloneContext from) {
+  public void recordOld(CloneContext ctx) {
+    this.setOld(ctx.getFromCache(this));
   }
   
   @Override

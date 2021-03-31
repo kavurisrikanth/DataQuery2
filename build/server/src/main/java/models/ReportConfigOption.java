@@ -14,7 +14,6 @@ public class ReportConfigOption extends DatabaseObject {
   @Field @NotNull private String identity;
   @Field @NotNull private String value;
   @Field @ManyToOne private ReportConfig masterReportConfig;
-  private transient ReportConfigOption old;
 
   public DatabaseObject _masterObject() {
     if (masterReportConfig != null) {
@@ -60,16 +59,6 @@ public class ReportConfigOption extends DatabaseObject {
     this.masterReportConfig = masterReportConfig;
   }
 
-  public ReportConfigOption getOld() {
-    return this.old;
-  }
-
-  public void setOld(ReportConfigOption old) {
-    this.old = old;
-  }
-
-  public void setOld(CloneContext ctx) {}
-
   public String displayName() {
     return "ReportConfigOption";
   }
@@ -106,6 +95,11 @@ public class ReportConfigOption extends DatabaseObject {
   }
 
   public boolean needOldObject() {
+    return true;
+  }
+
+  @Override
+  public boolean _isEntity() {
     return true;
   }
 }

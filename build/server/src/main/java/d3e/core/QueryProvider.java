@@ -1,7 +1,8 @@
 package d3e.core;
 
+import classes.AllStudents;
+import classes.LimitedStudents;
 import classes.LoginResult;
-import java.util.List;
 import java.util.Optional;
 import javax.annotation.PostConstruct;
 import lists.AllStudentsImpl;
@@ -67,11 +68,11 @@ public class QueryProvider {
     return findById.orElse(null);
   }
 
-  public List<Student> getAllStudents() {
+  public AllStudents getAllStudents() {
     return allStudentsImpl.get();
   }
 
-  public List<Student> getLimitedStudents() {
+  public LimitedStudents getLimitedStudents() {
     return limitedStudentsImpl.get();
   }
 

@@ -1,5 +1,5 @@
 package store;
 
 public enum StoreEventType {
-	INSERT, UPDATE, DELETE
+	Insert, Update, Delete
 }

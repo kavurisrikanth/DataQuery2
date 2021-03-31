@@ -4,6 +4,7 @@ import graphql.input.SMSMessageEntityInput;
 import java.util.stream.Collectors;
 import models.SMSMessage;
 import org.springframework.stereotype.Service;
+import rest.GraphQLInputContext;
 import store.EntityValidationContext;
 import store.InputHelper;
 
@@ -40,6 +41,23 @@ public class SMSMessageEntityHelper<T extends SMSMessage, I extends SMSMessageEn
     }
     entity.updateMasters((o) -> {});
     return entity;
+  }
+
+  @Override
+  public void fromInput(T entity, GraphQLInputContext ctx) {
+    if (ctx.has("from")) {
+      entity.setFrom(ctx.readString("from"));
+    }
+    if (ctx.has("to")) {
+      entity.setTo(ctx.readStringColl("to"));
+    }
+    if (ctx.has("body")) {
+      entity.setBody(ctx.readString("body"));
+    }
+    if (ctx.has("createdOn")) {
+      entity.setCreatedOn(ctx.readDateTime("createdOn"));
+    }
+    entity.updateMasters((o) -> {});
   }
 
   public SMSMessageEntityInput toInput(T entity) {

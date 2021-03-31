@@ -120,4 +120,9 @@ public class ReportConfig extends DatabaseObject {
     super.collectCreatableReferences(_refs);
     Database.collectCollctionCreatableReferences(_refs, this.values);
   }
+
+  @Override
+  public boolean _isEntity() {
+    return true;
+  }
 }

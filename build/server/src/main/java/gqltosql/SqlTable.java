@@ -8,10 +8,12 @@ public class SqlTable {
 	private String table;
 	private String type;
 	private List<ISqlColumn> columns = new ArrayList<>();
+	private boolean embedded;
 
-	public SqlTable(String type, String table) {
+	public SqlTable(String type, String table, boolean embedded) {
 		this.type = type;
 		this.table = table;
+		this.embedded = embedded;
 	}
 
 	public void addColumn(ISqlColumn column) {
@@ -39,12 +41,23 @@ public class SqlTable {
 	}
 
 	public void addSelections(SqlQueryContext ctx) {
-		ctx.addSelection(ctx.getFrom() + "._id", "id");
-		getColumns().forEach(c -> c.addColumn(ctx));
+		if (!embedded) {
+			ctx.addSelection(ctx.getFrom() + "._id", "id");
+		}
+		getColumns().forEach(c -> c.addColumn(this, ctx));
 	}
 
 	@Override
 	public String toString() {
 		return table;
+	}
+
+	public ISqlColumn getColumn(String name) {
+		for (ISqlColumn c : columns) {
+			if (c.getFieldName().equals(name)) {
+				return c;
+			}
+		}
+		return null;
 	}
 }

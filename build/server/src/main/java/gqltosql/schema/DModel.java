@@ -1,5 +1,6 @@
 package gqltosql.schema;
 
+import java.util.Collection;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -11,10 +12,38 @@ public class DModel<T> {
 	private String table;
 	private Map<String, DField<T>> fields = new HashMap<>();
 	private DModel<?> parent;
+	private boolean embedded;
+	private boolean entity;
+	private boolean document;
+	private DModelType modelType;
 
-	public DModel(String type, String table) {
+	public DModel(String type, String table, DModelType modelType) {
 		this.type = type;
 		this.table = table;
+		this.modelType = modelType;
+	}
+
+	public DModel(String type, String table) {
+		this(type, table, false);
+	}
+
+	public DModel(String type, String table, boolean embedded) {
+		this.type = type;
+		this.table = table;
+		this.embedded = embedded;
+		this.entity = true;
+	}
+
+	public DModelType getModelType() {
+		return modelType;
+	}
+
+	public void setEntity(boolean entity) {
+		this.entity = entity;
+	}
+
+	public boolean isEmbedded() {
+		return modelType == DModelType.EMBEDDED;
 	}
 
 	public String getTableName() {
@@ -44,6 +73,10 @@ public class DModel<T> {
 		return fields.containsKey(name);
 	}
 
+	public void setParent(DModel<?> parent) {
+		this.parent = parent;
+	}
+
 	public DModel<?> getParent() {
 		return parent;
 	}
@@ -66,8 +99,13 @@ public class DModel<T> {
 	}
 
 	public void addReferenceCollection(String name, String column, String collTable, DModel<?> ref,
-			Function<T, List<?>> getter) {
+			Function<T, Collection<?>> getter) {
 		addField(new DRefCollField<T>(this, name, column, collTable, ref, getter));
+	}
+
+	public <V> void addFlatCollection(String name, String column, String collTable, DModel<?> ref,
+			Function<T, Collection<?>> getter, String... flatPaths) {
+		addField(new DFlatField<T, V>(this, name, column, collTable, ref, getter, flatPaths));
 	}
 
 	public void addInverseCollection(String name, String column, DModel<?> ref, Function<T, List<?>> getter) {

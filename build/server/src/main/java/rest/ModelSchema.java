@@ -1,6 +1,7 @@
 package rest;
 
 import gqltosql.schema.DModel;
+import gqltosql.schema.DModelType;
 import gqltosql.schema.IModelSchema;
 import java.util.HashMap;
 import java.util.Map;
@@ -17,10 +18,9 @@ import models.SMSMessage;
 import models.Student;
 import models.User;
 import models.UserSession;
-import org.springframework.stereotype.Service;
 
-@Service
-public class ModelScema implements IModelSchema {
+@org.springframework.stereotype.Service
+public class ModelSchema implements IModelSchema {
   private Map<String, DModel<?>> allTypes = new HashMap<>();
 
   @PostConstruct
@@ -41,18 +41,21 @@ public class ModelScema implements IModelSchema {
   }
 
   private void createAllTables() {
-    addTable(new DModel<AnonymousUser>("AnonymousUser", "_anonymous_user"));
-    addTable(new DModel<Avatar>("Avatar", "_avatar"));
-    addTable(new DModel<D3EImage>("D3EImage", "_d3eimage"));
-    addTable(new DModel<D3EMessage>("D3EMessage", "_d3emessage"));
-    addTable(new DModel<EmailMessage>("EmailMessage", "_email_message"));
-    addTable(new DModel<OneTimePassword>("OneTimePassword", "_one_time_password"));
-    addTable(new DModel<ReportConfig>("ReportConfig", "_report_config"));
-    addTable(new DModel<ReportConfigOption>("ReportConfigOption", "_report_config_option"));
-    addTable(new DModel<SMSMessage>("SMSMessage", "_smsmessage"));
-    addTable(new DModel<Student>("Student", "_student"));
-    addTable(new DModel<User>("User", "_user"));
-    addTable(new DModel<UserSession>("UserSession", "_user_session"));
+    addTable(new DModel<AnonymousUser>("AnonymousUser", "_anonymous_user", DModelType.ENTITY));
+    addTable(new DModel<Avatar>("Avatar", "_avatar", DModelType.ENTITY));
+    addTable(new DModel<D3EImage>("D3EImage", "_d3eimage", DModelType.EMBEDDED));
+    addTable(new DModel<D3EMessage>("D3EMessage", "_d3emessage", DModelType.TRANSIENT));
+    addTable(new DModel<EmailMessage>("EmailMessage", "_email_message", DModelType.TRANSIENT));
+    addTable(
+        new DModel<OneTimePassword>("OneTimePassword", "_one_time_password", DModelType.ENTITY));
+    addTable(new DModel<ReportConfig>("ReportConfig", "_report_config", DModelType.ENTITY));
+    addTable(
+        new DModel<ReportConfigOption>(
+            "ReportConfigOption", "_report_config_option", DModelType.ENTITY));
+    addTable(new DModel<SMSMessage>("SMSMessage", "_smsmessage", DModelType.TRANSIENT));
+    addTable(new DModel<Student>("Student", "_student", DModelType.ENTITY));
+    addTable(new DModel<User>("User", "_user", DModelType.ENTITY));
+    addTable(new DModel<UserSession>("UserSession", "_user_session", DModelType.ENTITY));
     addAnonymousUserFields();
     addAvatarFields();
     addD3EImageFields();
@@ -69,6 +72,7 @@ public class ModelScema implements IModelSchema {
 
   private void addAnonymousUserFields() {
     DModel<AnonymousUser> m = getType2("AnonymousUser");
+    m.setParent(getType("User"));
     m.addPrimitive("id", "_id", (s) -> s.getId());
   }
 
@@ -98,6 +102,7 @@ public class ModelScema implements IModelSchema {
 
   private void addEmailMessageFields() {
     DModel<EmailMessage> m = getType2("EmailMessage");
+    m.setParent(getType("D3EMessage"));
     m.addPrimitive("id", "_id", (s) -> s.getId());
     m.addPrimitiveCollection("bcc", "_bcc", "_email_message_bcc", (s) -> s.getBcc());
     m.addPrimitiveCollection("cc", "_cc", "_email_message_cc", (s) -> s.getCc());
@@ -147,6 +152,7 @@ public class ModelScema implements IModelSchema {
 
   private void addSMSMessageFields() {
     DModel<SMSMessage> m = getType2("SMSMessage");
+    m.setParent(getType("D3EMessage"));
     m.addPrimitive("id", "_id", (s) -> s.getId());
   }
 

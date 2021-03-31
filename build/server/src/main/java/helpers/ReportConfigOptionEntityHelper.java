@@ -6,6 +6,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import repository.jpa.ReportConfigOptionRepository;
 import repository.jpa.ReportConfigRepository;
+import rest.GraphQLInputContext;
 import store.EntityHelper;
 import store.EntityMutator;
 import store.EntityValidationContext;
@@ -46,6 +47,16 @@ public class ReportConfigOptionEntityHelper<
       entity.setValue(input.value);
     }
     return entity;
+  }
+
+  @Override
+  public void fromInput(T entity, GraphQLInputContext ctx) {
+    if (ctx.has("identity")) {
+      entity.setIdentity(ctx.readString("identity"));
+    }
+    if (ctx.has("value")) {
+      entity.setValue(ctx.readString("value"));
+    }
   }
 
   public ReportConfigOptionEntityInput toInput(T entity) {
