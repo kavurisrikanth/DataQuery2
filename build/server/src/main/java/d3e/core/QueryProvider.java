@@ -1,11 +1,13 @@
 package d3e.core;
 
 import classes.AllStudents;
+import classes.LimitAndOffsetStudents;
 import classes.LimitedStudents;
 import classes.LoginResult;
 import java.util.Optional;
 import javax.annotation.PostConstruct;
 import lists.AllStudentsImpl;
+import lists.LimitAndOffsetStudentsImpl;
 import lists.LimitedStudentsImpl;
 import models.AnonymousUser;
 import models.OneTimePassword;
@@ -37,6 +39,7 @@ public class QueryProvider {
   @Autowired private UserRepository userRepository;
   @Autowired private UserSessionRepository userSessionRepository;
   @Autowired private AllStudentsImpl allStudentsImpl;
+  @Autowired private LimitAndOffsetStudentsImpl limitAndOffsetStudentsImpl;
   @Autowired private LimitedStudentsImpl limitedStudentsImpl;
   @Autowired private ObjectFactory<AppSessionProvider> provider;
 
@@ -70,6 +73,10 @@ public class QueryProvider {
 
   public AllStudents getAllStudents() {
     return allStudentsImpl.get();
+  }
+
+  public LimitAndOffsetStudents getLimitAndOffsetStudents() {
+    return limitAndOffsetStudentsImpl.get();
   }
 
   public LimitedStudents getLimitedStudents() {

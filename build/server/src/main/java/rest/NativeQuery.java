@@ -8,6 +8,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.UUID;
 import lists.AllStudentsImpl;
+import lists.LimitAndOffsetStudentsImpl;
 import lists.LimitedStudentsImpl;
 import models.AnonymousUser;
 import models.OneTimePassword;
@@ -48,6 +49,7 @@ public class NativeQuery extends AbstractQueryService {
   @Autowired private PasswordEncoder passwordEncoder;
   @Autowired private ObjectFactory<AppSessionProvider> provider;
   @Autowired private AllStudentsImpl allStudentsImpl;
+  @Autowired private LimitAndOffsetStudentsImpl limitAndOffsetStudentsImpl;
   @Autowired private LimitedStudentsImpl limitedStudentsImpl;
 
   @PostMapping(path = "/query", produces = MediaType.APPLICATION_JSON_VALUE)
