@@ -117,6 +117,14 @@ public class ListExt {
 	public static <E> List<E> sublist(List<E> source, long start, long end) {
 		return source.subList((int) (long) start, end == -1? source.size() : (int) (long) end);
 	}
+	
+	public static <E> List<E> slice(List<E> source, long startAt, long resultSize) {
+		long endAt = resultSize + startAt - 1;
+		if (endAt >= source.size()) {
+			endAt = -1;
+		}
+		return sublist(source, startAt, endAt);
+	}
 
 	public static <E> Set length(List<E> source, Integer newLength) {
 		// TODO

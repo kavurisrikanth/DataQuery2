@@ -47,7 +47,7 @@ public class LimitAndOffsetStudentsImpl extends AbsDataQueryImpl {
     result.put("items", array);
     return result;
   }
-  
+
   public void assertLimitNotNegative(long limit) {
     if (limit < 0) {
       throw new RuntimeException("Limit is negative.");
@@ -55,7 +55,7 @@ public class LimitAndOffsetStudentsImpl extends AbsDataQueryImpl {
   }
 
   public List<NativeObj> getNativeResult() {
-    assertLimitNotNegative(5 - 10);
+    assertLimitNotNegative(5l - 10l);
     Query query =
         em.createNativeQuery(
             "select a._id a0 from _student a order by a._name limit 5 - 10 offset 10");

@@ -1,0 +1,17 @@
+(DataQuery LimitAndOffsetStudents3 {
+    inputs [
+        (limit {
+            type ({
+                primitive Integer
+            })
+        })
+        (offset {
+            type ({
+                primitive Integer
+            })
+        })
+    ]
+    query `
+        Student.all.orderBy((s) => s.name).slice(inputs.offset, inputs.limit).toList()
+    `
+})

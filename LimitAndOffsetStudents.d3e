@@ -1,5 +1,5 @@
 (DataQuery LimitAndOffsetStudents {
     query `
-        Student.all.orderBy((s) => s.name).sublist(10, 35).toList()
+        Student.all.orderBy((s) => s.name).sublist(10, 5).toList()
     `
 })

@@ -2,11 +2,17 @@ package d3e.core;
 
 import classes.AllStudents;
 import classes.LimitAndOffsetStudents;
+import classes.LimitAndOffsetStudents2;
+import classes.LimitAndOffsetStudents2Request;
+import classes.LimitAndOffsetStudents3;
+import classes.LimitAndOffsetStudents3Request;
 import classes.LimitedStudents;
 import classes.LoginResult;
 import java.util.Optional;
 import javax.annotation.PostConstruct;
 import lists.AllStudentsImpl;
+import lists.LimitAndOffsetStudents2Impl;
+import lists.LimitAndOffsetStudents3Impl;
 import lists.LimitAndOffsetStudentsImpl;
 import lists.LimitedStudentsImpl;
 import models.AnonymousUser;
@@ -41,6 +47,8 @@ public class QueryProvider {
   @Autowired private AllStudentsImpl allStudentsImpl;
   @Autowired private LimitAndOffsetStudentsImpl limitAndOffsetStudentsImpl;
   @Autowired private LimitedStudentsImpl limitedStudentsImpl;
+  @Autowired private LimitAndOffsetStudents2Impl limitAndOffsetStudents2Impl;
+  @Autowired private LimitAndOffsetStudents3Impl limitAndOffsetStudents3Impl;
   @Autowired private ObjectFactory<AppSessionProvider> provider;
 
   @PostConstruct
@@ -81,6 +89,14 @@ public class QueryProvider {
 
   public LimitedStudents getLimitedStudents() {
     return limitedStudentsImpl.get();
+  }
+
+  public LimitAndOffsetStudents2 getLimitAndOffsetStudents2(LimitAndOffsetStudents2Request inputs) {
+    return limitAndOffsetStudents2Impl.get(inputs);
+  }
+
+  public LimitAndOffsetStudents3 getLimitAndOffsetStudents3(LimitAndOffsetStudents3Request inputs) {
+    return limitAndOffsetStudents3Impl.get(inputs);
   }
 
   public LoginResult loginWithOTP(String token, String code) {

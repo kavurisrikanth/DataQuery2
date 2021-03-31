@@ -48,8 +48,15 @@ public class LimitedStudentsImpl extends AbsDataQueryImpl {
     return result;
   }
 
+  public void assertLimitNotNegative(long limit) {
+    if (limit < 0) {
+      throw new RuntimeException("Limit is negative.");
+    }
+  }
+
   public List<NativeObj> getNativeResult() {
-    Query query = em.createNativeQuery("select a._id a0 from _student a order by a._name limit 0");
+    assertLimitNotNegative(10l);
+    Query query = em.createNativeQuery("select a._id a0 from _student a order by a._name limit 10");
     List<NativeObj> result = NativeSqlUtil.createNativeObj(query.getResultList(), 0);
     return result;
   }
