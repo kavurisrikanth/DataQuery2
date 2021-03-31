@@ -72,17 +72,29 @@ type Query
 	getOneTimePasswordById ( id: Long ) : OneTimePassword
 	checkTokenUniqueInOneTimePassword ( oneTimePasswordId: Long token: String ) : Boolean
 	getStudentById ( id: Long ) : Student
+	getAllStudents : AllStudents
+	getLimitedStudents : LimitedStudents
 	loginWithOTP ( token: String code: String ) : LoginResult
 }
 
 type Mutation
 {
+	createStudent ( input: StudentEntityInput ) : MutateStudentResult
+	updateStudent ( input: StudentEntityInput ) : MutateStudentResult
+	deleteStudent ( input: Long ) : MutateStudentResult
 }
 
 type MutateOneTimePasswordResult
 {
 	status : MutateResultStatus
 	value : OneTimePassword
+	errors : [String]
+}
+
+type MutateStudentResult
+{
+	status : MutateResultStatus
+	value : Student
 	errors : [String]
 }
 
@@ -340,6 +352,16 @@ input UserSessionEntityInput
 {
 	id : Long
 	userSessionId : String
+}
+
+type AllStudents
+{
+	items : [Student]
+}
+
+type LimitedStudents
+{
+	items : [Student]
 }
 
 enum MutateResultStatus {

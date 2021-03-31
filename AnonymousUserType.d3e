@@ -1,0 +1,19 @@
+(UserType AnonymousUserType {
+    userModel #AnonymousUser
+    modelAccess [
+        ({
+            model #Student
+            create true
+            update true
+            delete true
+        })
+    ]
+    queries [
+        ({
+            query #LimitedStudents
+        })
+        ({
+            query #AllStudents
+        })
+    ]
+})

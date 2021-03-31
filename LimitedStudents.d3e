@@ -1,5 +1,5 @@
 (DataQuery LimitedStudents {
     query `
-        Student.all.take(10).toList()
+        Student.all.orderBy((s) => s.name).take(10).toList()
     `
 })

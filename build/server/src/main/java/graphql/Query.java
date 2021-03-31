@@ -1,10 +1,15 @@
 package graphql;
 
+import classes.AllStudents;
+import classes.LimitedStudents;
 import classes.LoginResult;
 import com.coxautodev.graphql.tools.GraphQLQueryResolver;
+import d3e.core.CurrentUser;
 import graphql.schema.DataFetchingEnvironment;
 import java.util.Optional;
 import java.util.UUID;
+import lists.AllStudentsImpl;
+import lists.LimitedStudentsImpl;
 import models.AnonymousUser;
 import models.OneTimePassword;
 import models.Student;
@@ -32,6 +37,8 @@ public class Query implements GraphQLQueryResolver {
   @Autowired private StudentRepository studentRepository;
   @Autowired private UserRepository userRepository;
   @Autowired private UserSessionRepository userSessionRepository;
+  @Autowired private AllStudentsImpl allStudentsImpl;
+  @Autowired private LimitedStudentsImpl limitedStudentsImpl;
   @Autowired private ObjectFactory<AppSessionProvider> provider;
 
   public DatabaseObject getObject() {
@@ -56,6 +63,28 @@ public class Query implements GraphQLQueryResolver {
   public Student getStudentById(long id, DataFetchingEnvironment env) {
     Optional<Student> findById = studentRepository.findById(id);
     return findById.orElse(null);
+  }
+
+  public AllStudents getAllStudents(DataFetchingEnvironment env) {
+    User currentUser = CurrentUser.get();
+    {
+      if (!(currentUser instanceof AnonymousUser)) {
+        throw new RuntimeException(
+            "Current user type does not have read permissions for this ObjectList.");
+      }
+    }
+    return allStudentsImpl.get();
+  }
+
+  public LimitedStudents getLimitedStudents(DataFetchingEnvironment env) {
+    User currentUser = CurrentUser.get();
+    {
+      if (!(currentUser instanceof AnonymousUser)) {
+        throw new RuntimeException(
+            "Current user type does not have read permissions for this ObjectList.");
+      }
+    }
+    return limitedStudentsImpl.get();
   }
 
   public LoginResult loginWithOTP(String token, String code) {
@@ -90,5 +119,9 @@ public class Query implements GraphQLQueryResolver {
         jwtTokenUtil.generateToken(
             email, new UserProxy(type, user.getId(), UUID.randomUUID().toString()));
     return loginResult;
+  }
+
+  public AnonymousUser currentAnonymousUser(DataFetchingEnvironment env) {
+    return provider.getObject().getAnonymousUser();
   }
 }

@@ -49,7 +49,7 @@ public class LimitedStudentsImpl extends AbsDataQueryImpl {
   }
 
   public List<NativeObj> getNativeResult() {
-    Query query = em.createNativeQuery("select a._id a0 from _student a limit 10");
+    Query query = em.createNativeQuery("select a._id a0 from _student a order by a._name limit -7");
     List<NativeObj> result = NativeSqlUtil.createNativeObj(query.getResultList(), 0);
     return result;
   }

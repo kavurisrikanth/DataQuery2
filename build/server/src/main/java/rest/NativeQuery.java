@@ -9,6 +9,7 @@ import java.util.List;
 import java.util.UUID;
 import lists.AllStudentsImpl;
 import lists.LimitedStudentsImpl;
+import models.AnonymousUser;
 import models.OneTimePassword;
 import models.User;
 import org.json.JSONObject;
@@ -90,11 +91,23 @@ public class NativeQuery extends AbstractQueryService {
         {
           return gqlToSql.execute("Student", field, ctx.readLong("id"));
         }
+      case "getAllStudents":
+        {
+          return allStudentsImpl.getAsJson(inspect(field, "items"));
+        }
+      case "getLimitedStudents":
+        {
+          return limitedStudentsImpl.getAsJson(inspect(field, "items"));
+        }
       case "loginWithOTP":
         {
           String token = ctx.readString("token");
           String code = ctx.readString("code");
           return loginWithOTP(field, token, code);
+        }
+      case "currentAnonymousUser":
+        {
+          return currentAnonymousUser(field);
         }
     }
     D3ELogger.info("Query Not found");
@@ -135,5 +148,10 @@ public class NativeQuery extends AbstractQueryService {
             id, new UserProxy(type, user.getId(), UUID.randomUUID().toString()));
     loginResult.put("token", finalToken);
     return loginResult;
+  }
+
+  private JSONObject currentAnonymousUser(Field field) throws Exception {
+    AnonymousUser user = provider.getObject().getAnonymousUser();
+    return gqlToSql.execute("AnonymousUser", field, user.getId());
   }
 }

@@ -1,14 +1,21 @@
 package rest;
 
 import classes.MutateResultStatus;
+import d3e.core.CloneContext;
+import d3e.core.CurrentUser;
 import d3e.core.D3ELogger;
+import d3e.core.ListExt;
 import d3e.core.TransactionWrapper;
 import gqltosql.schema.GraphQLDataFetcher;
 import gqltosql.schema.IModelSchema;
 import graphql.language.Field;
+import helpers.StudentEntityHelper;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Random;
+import models.AnonymousUser;
+import models.Student;
+import models.User;
 import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
@@ -109,9 +116,70 @@ public class NativeMutation extends AbstractQueryService {
             variables);
     D3ELogger.info("Mutation: " + field.getName());
     switch (field.getName()) {
+      case "createStudent":
+        {
+          return createSuccessResult(createStudent(ctx), field, "Student");
+        }
+      case "updateStudent":
+        {
+          return createSuccessResult(updateStudent(ctx), field, "Student");
+        }
+      case "deleteStudent":
+        {
+          deleteStudent(ctx);
+          return createSuccessResult(null, field, "Student");
+        }
     }
     D3ELogger.info("Mutation Not found");
     return null;
+  }
+
+  private Student createStudent(GraphQLInputContext ctx) throws Exception {
+    User currentUser = CurrentUser.get();
+    if (!(currentUser instanceof AnonymousUser)) {
+      throw new ValidationFailedException(
+          MutateResultStatus.AuthFail,
+          ListExt.asList("Current user type does not have create permissions for this model."));
+    }
+    Student newStudent = ctx.readChild("input", "Student");
+    this.mutator.save(newStudent, false);
+    return newStudent;
+  }
+
+  private Student updateStudent(GraphQLInputContext ctx) throws Exception {
+    User currentUser = CurrentUser.get();
+    if (!(currentUser instanceof AnonymousUser)) {
+      throw new ValidationFailedException(
+          MutateResultStatus.AuthFail,
+          ListExt.asList("Current user type does not have update permissions for this model."));
+    }
+    StudentEntityHelper studentHelper = this.mutator.getHelper("Student");
+    Student currentStudent = studentRepository.findById(ctx.readLong("input", "id")).orElse(null);
+    if (currentStudent == null) {
+      throw new ValidationFailedException(
+          MutateResultStatus.BadRequest, ListExt.asList("Invalid ID."));
+    }
+    currentStudent.recordOld(CloneContext.forCloneable(currentStudent, false));
+    Student newStudent = ctx.readChild("input", "Student");
+    this.mutator.update(newStudent, false);
+    return newStudent;
+  }
+
+  private void deleteStudent(GraphQLInputContext ctx) throws Exception {
+    User currentUser = CurrentUser.get();
+    if (!(currentUser instanceof AnonymousUser)) {
+      throw new ValidationFailedException(
+          MutateResultStatus.AuthFail,
+          ListExt.asList("Current user type does not have delete permissions for this model."));
+    }
+    long gqlInputId = ctx.readLong("input");
+    StudentEntityHelper studentHelper = this.mutator.getHelper("Student");
+    Student currentStudent = studentRepository.findById(gqlInputId).orElse(null);
+    if (currentStudent == null) {
+      throw new ValidationFailedException(
+          MutateResultStatus.BadRequest, ListExt.asList("Invalid ID"));
+    }
+    this.mutator.delete(currentStudent, false);
   }
 
   private String generateToken() {

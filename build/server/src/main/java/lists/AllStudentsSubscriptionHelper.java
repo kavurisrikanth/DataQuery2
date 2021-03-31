@@ -15,6 +15,7 @@ import io.reactivex.rxjava3.core.FlowableOnSubscribe;
 import io.reactivex.rxjava3.disposables.Disposable;
 import java.util.List;
 import java.util.Map;
+import models.AnonymousUser;
 import models.Student;
 import models.User;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -113,6 +114,10 @@ public class AllStudentsSubscriptionHelper implements FlowableOnSubscribe<DataQu
   public Flowable<DataQueryDataChange> subscribe(Field field) {
     {
       User currentUser = CurrentUser.get();
+      if (!(currentUser instanceof AnonymousUser)) {
+        throw new RuntimeException(
+            "Current user type does not have read permissions for this ObjectList.");
+      }
     }
     this.field = field;
     this.flowable = Flowable.create(this, BackpressureStrategy.BUFFER);
