@@ -46,9 +46,9 @@ public class QueryProvider {
   @Autowired private UserSessionRepository userSessionRepository;
   @Autowired private AllStudentsImpl allStudentsImpl;
   @Autowired private LimitAndOffsetStudentsImpl limitAndOffsetStudentsImpl;
-  @Autowired private LimitedStudentsImpl limitedStudentsImpl;
   @Autowired private LimitAndOffsetStudents2Impl limitAndOffsetStudents2Impl;
   @Autowired private LimitAndOffsetStudents3Impl limitAndOffsetStudents3Impl;
+  @Autowired private LimitedStudentsImpl limitedStudentsImpl;
   @Autowired private ObjectFactory<AppSessionProvider> provider;
 
   @PostConstruct
@@ -87,16 +87,16 @@ public class QueryProvider {
     return limitAndOffsetStudentsImpl.get();
   }
 
-  public LimitedStudents getLimitedStudents() {
-    return limitedStudentsImpl.get();
-  }
-
   public LimitAndOffsetStudents2 getLimitAndOffsetStudents2(LimitAndOffsetStudents2Request inputs) {
     return limitAndOffsetStudents2Impl.get(inputs);
   }
 
   public LimitAndOffsetStudents3 getLimitAndOffsetStudents3(LimitAndOffsetStudents3Request inputs) {
     return limitAndOffsetStudents3Impl.get(inputs);
+  }
+
+  public LimitedStudents getLimitedStudents() {
+    return limitedStudentsImpl.get();
   }
 
   public LoginResult loginWithOTP(String token, String code) {

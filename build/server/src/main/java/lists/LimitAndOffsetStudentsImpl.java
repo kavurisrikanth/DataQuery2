@@ -48,12 +48,6 @@ public class LimitAndOffsetStudentsImpl extends AbsDataQueryImpl {
     return result;
   }
 
-  public void assertLimitNotNegative(long limit) {
-    if (limit < 0) {
-      throw new RuntimeException("Limit is negative.");
-    }
-  }
-
   public List<NativeObj> getNativeResult() {
     assertLimitNotNegative(5l - 10l);
     Query query =

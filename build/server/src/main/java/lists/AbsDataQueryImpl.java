@@ -24,4 +24,10 @@ public abstract class AbsDataQueryImpl {
 	protected void setParameter(Query query, String name, Object value) {
 		query.setParameter(name, value);
 	}
+	
+	protected void assertLimitNotNegative(long limit) {
+		if (limit < 0) {
+			throw new RuntimeException("Limit is negative.");
+		}
+	}
 }

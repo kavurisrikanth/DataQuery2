@@ -52,9 +52,9 @@ public class NativeQuery extends AbstractQueryService {
   @Autowired private ObjectFactory<AppSessionProvider> provider;
   @Autowired private AllStudentsImpl allStudentsImpl;
   @Autowired private LimitAndOffsetStudentsImpl limitAndOffsetStudentsImpl;
-  @Autowired private LimitedStudentsImpl limitedStudentsImpl;
   @Autowired private LimitAndOffsetStudents2Impl limitAndOffsetStudents2Impl;
   @Autowired private LimitAndOffsetStudents3Impl limitAndOffsetStudents3Impl;
+  @Autowired private LimitedStudentsImpl limitedStudentsImpl;
 
   @PostMapping(path = "/query", produces = MediaType.APPLICATION_JSON_VALUE)
   public String run(@RequestBody String query) throws Exception {
