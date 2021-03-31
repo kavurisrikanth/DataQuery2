@@ -12,6 +12,7 @@ import lists.LimitAndOffsetStudents2Impl;
 import lists.LimitAndOffsetStudents3Impl;
 import lists.LimitAndOffsetStudentsImpl;
 import lists.LimitedStudentsImpl;
+import lists.OrderedStudentsImpl;
 import models.AnonymousUser;
 import models.OneTimePassword;
 import models.User;
@@ -55,6 +56,7 @@ public class NativeQuery extends AbstractQueryService {
   @Autowired private LimitAndOffsetStudents2Impl limitAndOffsetStudents2Impl;
   @Autowired private LimitAndOffsetStudents3Impl limitAndOffsetStudents3Impl;
   @Autowired private LimitedStudentsImpl limitedStudentsImpl;
+  @Autowired private OrderedStudentsImpl orderedStudentsImpl;
 
   @PostMapping(path = "/query", produces = MediaType.APPLICATION_JSON_VALUE)
   public String run(@RequestBody String query) throws Exception {

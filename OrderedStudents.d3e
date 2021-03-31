@@ -1,0 +1,6 @@
+(DataQuery OrderedStudents {
+    query `
+        Student.all.orderBy((s) => s.name)
+    `
+    enableSync true
+})

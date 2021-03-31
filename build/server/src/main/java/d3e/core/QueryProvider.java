@@ -8,6 +8,7 @@ import classes.LimitAndOffsetStudents3;
 import classes.LimitAndOffsetStudents3Request;
 import classes.LimitedStudents;
 import classes.LoginResult;
+import classes.OrderedStudents;
 import java.util.Optional;
 import javax.annotation.PostConstruct;
 import lists.AllStudentsImpl;
@@ -15,6 +16,7 @@ import lists.LimitAndOffsetStudents2Impl;
 import lists.LimitAndOffsetStudents3Impl;
 import lists.LimitAndOffsetStudentsImpl;
 import lists.LimitedStudentsImpl;
+import lists.OrderedStudentsImpl;
 import models.AnonymousUser;
 import models.OneTimePassword;
 import models.Student;
@@ -49,6 +51,7 @@ public class QueryProvider {
   @Autowired private LimitAndOffsetStudents2Impl limitAndOffsetStudents2Impl;
   @Autowired private LimitAndOffsetStudents3Impl limitAndOffsetStudents3Impl;
   @Autowired private LimitedStudentsImpl limitedStudentsImpl;
+  @Autowired private OrderedStudentsImpl orderedStudentsImpl;
   @Autowired private ObjectFactory<AppSessionProvider> provider;
 
   @PostConstruct
@@ -97,6 +100,10 @@ public class QueryProvider {
 
   public LimitedStudents getLimitedStudents() {
     return limitedStudentsImpl.get();
+  }
+
+  public OrderedStudents getOrderedStudents() {
+    return orderedStudentsImpl.get();
   }
 
   public LoginResult loginWithOTP(String token, String code) {

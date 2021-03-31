@@ -14,6 +14,7 @@ import java.util.HashMap;
 import java.util.List;
 import lists.AllStudentsSubscriptionHelper;
 import lists.DataQueryChange;
+import lists.OrderedStudentsSubscriptionHelper;
 import org.json.JSONObject;
 import org.springframework.beans.factory.ObjectFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -30,6 +31,7 @@ public class NativeSubscription extends AbstractQueryService {
   @Autowired private IModelSchema schema;
   @Autowired private GqlToSql gqltosql;
   @Autowired private ObjectFactory<AllStudentsSubscriptionHelper> allStudents;
+  @Autowired private ObjectFactory<OrderedStudentsSubscriptionHelper> orderedStudents;
 
   public Flowable<JSONObject> subscribe(JSONObject req) throws Exception {
     List<Field> fields = parseFields(req);
@@ -173,6 +175,13 @@ public class NativeSubscription extends AbstractQueryService {
       case "onAllStudentsChange":
         {
           return allStudents
+              .getObject()
+              .subscribe(inspect(field, "data.items"))
+              .map((e) -> fromDataQueryDataChange(e, field));
+        }
+      case "onOrderedStudentsChange":
+        {
+          return orderedStudents
               .getObject()
               .subscribe(inspect(field, "data.items"))
               .map((e) -> fromDataQueryDataChange(e, field));

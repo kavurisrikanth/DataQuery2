@@ -16,7 +16,6 @@ import io.reactivex.rxjava3.disposables.Disposable;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
-import models.AnonymousUser;
 import models.Student;
 import models.User;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -28,15 +27,19 @@ import store.StoreEventType;
 
 @Component
 @Scope(ConfigurableBeanFactory.SCOPE_PROTOTYPE)
-public class AllStudentsSubscriptionHelper implements FlowableOnSubscribe<DataQueryDataChange> {
+public class OrderedStudentsSubscriptionHelper implements FlowableOnSubscribe<DataQueryDataChange> {
   private class Output {
     Map<Long, Row> rows = MapExt.Map();
+    List<OrderBy> orderByList = ListExt.List();
 
     public Output(List<NativeObj> rows) {
       for (int i = 0; i < rows.size(); i++) {
         NativeObj wrappedBase = rows.get(i);
         Row row = new Row("" + i, wrappedBase, i);
         this.rows.put(wrappedBase.getId(), row);
+        NativeObj base = wrappedBase.getRef(1);
+        String _orderBy0 = base.getString(0);
+        this.orderByList.add(new OrderBy(_orderBy0, row));
       }
     }
 
@@ -50,6 +53,10 @@ public class AllStudentsSubscriptionHelper implements FlowableOnSubscribe<DataQu
           .filter((one) -> one.index >= insertAt)
           .forEach((one) -> one.index++);
       this.rows.put(id, row);
+      NativeObj wrappedBase = row.row;
+      NativeObj base = wrappedBase.getRef(1);
+      String _orderBy0 = base.getString(0);
+      this.orderByList.add(new OrderBy(_orderBy0, row));
     }
 
     public Row deleteRow(long id) {
@@ -58,7 +65,22 @@ public class AllStudentsSubscriptionHelper implements FlowableOnSubscribe<DataQu
       this.rows.values().stream()
           .filter((one) -> one.index > deleteAt)
           .forEach((one) -> one.index--);
+      ListExt.removeWhere(this.orderByList, (o) -> Objects.equals(o.row, row));
       return this.rows.remove(id);
+    }
+
+    public String getPath(String _orderBy0) {
+      long index = 0;
+      for (OrderBy orderBy : this.orderByList) {
+        if (!(orderBy.fallsBefore(_orderBy0))) {
+          break;
+        }
+        index++;
+      }
+      if (index == this.rows.size()) {
+        return "-1";
+      }
+      return Long.toString(index);
     }
   }
 
@@ -74,8 +96,28 @@ public class AllStudentsSubscriptionHelper implements FlowableOnSubscribe<DataQu
     }
   }
 
+  private class OrderBy {
+    String _orderBy0;
+    Row row;
+
+    public OrderBy(String _orderBy0, Row row) {
+      this._orderBy0 = _orderBy0;
+      this.row = row;
+    }
+
+    public boolean fallsBefore(String _orderBy0) {
+      if (this._orderBy0.compareTo(_orderBy0) < 0) {
+        return true;
+      }
+      if (this._orderBy0.compareTo(_orderBy0) > 0) {
+        return false;
+      }
+      return true;
+    }
+  }
+
   @Autowired private TransactionWrapper transactional;
-  @Autowired private AllStudentsImpl allStudentsImpl;
+  @Autowired private OrderedStudentsImpl orderedStudentsImpl;
   @Autowired private D3ESubscription subscription;
   private Flowable<DataQueryDataChange> flowable;
   private FlowableEmitter<DataQueryDataChange> emitter;
@@ -87,7 +129,7 @@ public class AllStudentsSubscriptionHelper implements FlowableOnSubscribe<DataQu
   public void handleContextStart(DataQueryDataChange event) {
     updateData(event);
     try {
-      event.data = allStudentsImpl.getAsJson(field, event.nativeData);
+      event.data = orderedStudentsImpl.getAsJson(field, event.nativeData);
       event.nativeData = null;
     } catch (Exception e) {
     }
@@ -103,7 +145,7 @@ public class AllStudentsSubscriptionHelper implements FlowableOnSubscribe<DataQu
   private void loadInitialData() {
     DataQueryDataChange change = new DataQueryDataChange();
     change.changeType = SubscriptionChangeType.All;
-    change.nativeData = allStudentsImpl.getNativeResult();
+    change.nativeData = orderedStudentsImpl.getNativeResult();
     handleContextStart(change);
   }
 
@@ -116,10 +158,6 @@ public class AllStudentsSubscriptionHelper implements FlowableOnSubscribe<DataQu
   public Flowable<DataQueryDataChange> subscribe(Field field) {
     {
       User currentUser = CurrentUser.get();
-      if (!(currentUser instanceof AnonymousUser)) {
-        throw new RuntimeException(
-            "Current user type does not have read permissions for this ObjectList.");
-      }
     }
     this.field = field;
     this.flowable = Flowable.create(this, BackpressureStrategy.BUFFER);
@@ -152,6 +190,15 @@ public class AllStudentsSubscriptionHelper implements FlowableOnSubscribe<DataQu
       Existing data is deleted
       */
       createDeleteChange(changes, model);
+    } else {
+      /*
+      Existing data is updated
+      */
+      Student old = model.getOld();
+      if (old == null) {
+        return;
+      }
+      createPathChangeChange(changes, model, old);
     }
     pushChanges(changes);
   }
@@ -160,7 +207,7 @@ public class AllStudentsSubscriptionHelper implements FlowableOnSubscribe<DataQu
     DataQueryDataChange change = new DataQueryDataChange();
     change.nativeData = createStudentData(model);
     change.changeType = SubscriptionChangeType.Insert;
-    change.path = "-1";
+    change.path = this.output.getPath(model.getName());
     change.index = output.rows.size();
     changes.add(change);
   }
@@ -178,9 +225,32 @@ public class AllStudentsSubscriptionHelper implements FlowableOnSubscribe<DataQu
     changes.add(change);
   }
 
+  private void createPathChangeChange(
+      List<DataQueryDataChange> changes, Student model, Student old) {
+    boolean changed =
+        old.getName() != null
+            && model.getName() != null
+            && old.getName().compareTo(model.getName()) != 0;
+    if (!(changed)) {
+      return;
+    }
+    Row row = output.get(model.getId());
+    if (row == null) {
+      return;
+    }
+    DataQueryDataChange change = new DataQueryDataChange();
+    change.changeType = SubscriptionChangeType.PathChange;
+    change.oldPath = row.path;
+    change.path = this.output.getPath(model.getName());
+    changes.add(change);
+  }
+
   private List<NativeObj> createStudentData(Student student) {
     List<NativeObj> data = ListExt.List();
-    NativeObj row = new NativeObj(student.getId());
+    NativeObj row = new NativeObj(2);
+    row.set(0, student.getName());
+    row.set(1, student.getId());
+    row.setId(1);
     data.add(row);
     return data;
   }
