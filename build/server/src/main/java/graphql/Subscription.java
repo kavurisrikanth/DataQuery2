@@ -5,6 +5,7 @@ import d3e.core.D3ESubscription;
 import graphql.events.AnonymousUserChangeEvent;
 import graphql.events.ChangeEventType;
 import graphql.events.OneTimePasswordChangeEvent;
+import graphql.events.ReportChangeEvent;
 import graphql.events.StudentChangeEvent;
 import graphql.events.UserChangeEvent;
 import graphql.events.UserSessionChangeEvent;
@@ -14,6 +15,7 @@ import java.util.List;
 import javax.annotation.PostConstruct;
 import models.AnonymousUser;
 import models.OneTimePassword;
+import models.Report;
 import models.Student;
 import models.User;
 import models.UserSession;
@@ -107,6 +109,34 @@ public class Subscription implements GraphQLSubscriptionResolver {
             (e) -> {
               OneTimePasswordChangeEvent event = new OneTimePasswordChangeEvent();
               event.model = ((OneTimePassword) e.getEntity());
+              event.changeType = from(e.getType());
+              return event;
+            });
+  }
+
+  public Object onReportChangeEvent(DataFetchingEnvironment env) {
+    provider.set(env);
+    return this.flowable
+        .filter((e) -> e.getEntity() instanceof Report)
+        .map(
+            (e) -> {
+              ReportChangeEvent event = new ReportChangeEvent();
+              event.model = ((Report) e.getEntity());
+              event.changeType = from(e.getType());
+              return event;
+            });
+  }
+
+  public Object onReportChangeEventById(List<Long> ids, DataFetchingEnvironment env) {
+    provider.set(env);
+    return this.flowable
+        .filter(
+            (e) ->
+                e.getEntity() instanceof Report && ids.contains(((Report) e.getEntity()).getId()))
+        .map(
+            (e) -> {
+              ReportChangeEvent event = new ReportChangeEvent();
+              event.model = ((Report) e.getEntity());
               event.changeType = from(e.getType());
               return event;
             });

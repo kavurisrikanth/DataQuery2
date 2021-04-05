@@ -14,6 +14,7 @@ import java.util.HashMap;
 import java.util.List;
 import lists.AllStudentsSubscriptionHelper;
 import lists.DataQueryChange;
+import lists.OrderedReportsSubscriptionHelper;
 import lists.OrderedStudentsSubscriptionHelper;
 import org.json.JSONObject;
 import org.springframework.beans.factory.ObjectFactory;
@@ -32,6 +33,7 @@ public class NativeSubscription extends AbstractQueryService {
   @Autowired private GqlToSql gqltosql;
   @Autowired private ObjectFactory<AllStudentsSubscriptionHelper> allStudents;
   @Autowired private ObjectFactory<OrderedStudentsSubscriptionHelper> orderedStudents;
+  @Autowired private ObjectFactory<OrderedReportsSubscriptionHelper> orderedReports;
 
   public Flowable<JSONObject> subscribe(JSONObject req) throws Exception {
     List<Field> fields = parseFields(req);
@@ -130,6 +132,20 @@ public class NativeSubscription extends AbstractQueryService {
               .filter((e) -> ids.contains(e.model.getId()))
               .map((e) -> fromD3ESubscriptionEvent(e, field, "OneTimePassword"));
         }
+      case "onReportChangeEvent":
+        {
+          return subscription
+              .onReportChangeEvent()
+              .map((e) -> fromD3ESubscriptionEvent(e, field, "Report"));
+        }
+      case "onReportChangeEventById":
+        {
+          List<Long> ids = ctx.readLongColl("ids");
+          return subscription
+              .onReportChangeEvent()
+              .filter((e) -> ids.contains(e.model.getId()))
+              .map((e) -> fromD3ESubscriptionEvent(e, field, "Report"));
+        }
       case "onStudentChangeEvent":
         {
           return subscription
@@ -182,6 +198,13 @@ public class NativeSubscription extends AbstractQueryService {
       case "onOrderedStudentsChange":
         {
           return orderedStudents
+              .getObject()
+              .subscribe(inspect(field, "data.items"))
+              .map((e) -> fromDataQueryDataChange(e, field));
+        }
+      case "onOrderedReportsChange":
+        {
+          return orderedReports
               .getObject()
               .subscribe(inspect(field, "data.items"))
               .map((e) -> fromDataQueryDataChange(e, field));

@@ -27,6 +27,7 @@ import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import repository.jpa.AnonymousUserRepository;
 import repository.jpa.OneTimePasswordRepository;
+import repository.jpa.ReportRepository;
 import repository.jpa.StudentRepository;
 import repository.jpa.UserRepository;
 import repository.jpa.UserSessionRepository;
@@ -44,6 +45,7 @@ public class NativeMutation extends AbstractQueryService {
   @Autowired private IModelSchema schema;
   @Autowired private AnonymousUserRepository anonymousUserRepository;
   @Autowired private OneTimePasswordRepository oneTimePasswordRepository;
+  @Autowired private ReportRepository reportRepository;
   @Autowired private StudentRepository studentRepository;
   @Autowired private UserRepository userRepository;
   @Autowired private UserSessionRepository userSessionRepository;

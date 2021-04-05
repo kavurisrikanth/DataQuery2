@@ -1,0 +1,6 @@
+(DataQuery OrderedReports {
+    query `
+        Report.all.orderBy((r) => r.student.name)
+    `
+    enableSync true
+})

@@ -1,0 +1,10 @@
+(Model Report {
+    master #Student
+    properties [
+        (marks {
+            type ({
+                primitive Double
+            })
+        })
+    ]
+})

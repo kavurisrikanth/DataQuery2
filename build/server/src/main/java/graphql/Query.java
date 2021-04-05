@@ -12,6 +12,7 @@ import lists.AllStudentsImpl;
 import lists.LimitedStudentsImpl;
 import models.AnonymousUser;
 import models.OneTimePassword;
+import models.Report;
 import models.Student;
 import models.User;
 import org.hibernate.Hibernate;
@@ -20,6 +21,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import repository.jpa.AnonymousUserRepository;
 import repository.jpa.OneTimePasswordRepository;
+import repository.jpa.ReportRepository;
 import repository.jpa.StudentRepository;
 import repository.jpa.UserRepository;
 import repository.jpa.UserSessionRepository;
@@ -34,6 +36,7 @@ public class Query implements GraphQLQueryResolver {
   @Autowired private PasswordEncoder passwordEncoder;
   @Autowired private AnonymousUserRepository anonymousUserRepository;
   @Autowired private OneTimePasswordRepository oneTimePasswordRepository;
+  @Autowired private ReportRepository reportRepository;
   @Autowired private StudentRepository studentRepository;
   @Autowired private UserRepository userRepository;
   @Autowired private UserSessionRepository userSessionRepository;
@@ -58,6 +61,11 @@ public class Query implements GraphQLQueryResolver {
   public boolean checkTokenUniqueInOneTimePassword(
       long oneTimePasswordId, String token, DataFetchingEnvironment env) {
     return oneTimePasswordRepository.checkTokenUnique(oneTimePasswordId, token);
+  }
+
+  public Report getReportById(long id, DataFetchingEnvironment env) {
+    Optional<Report> findById = reportRepository.findById(id);
+    return findById.orElse(null);
   }
 
   public Student getStudentById(long id, DataFetchingEnvironment env) {

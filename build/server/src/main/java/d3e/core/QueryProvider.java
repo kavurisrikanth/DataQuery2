@@ -8,6 +8,7 @@ import classes.LimitAndOffsetStudents3;
 import classes.LimitAndOffsetStudents3Request;
 import classes.LimitedStudents;
 import classes.LoginResult;
+import classes.OrderedReports;
 import classes.OrderedStudents;
 import java.util.Optional;
 import javax.annotation.PostConstruct;
@@ -16,9 +17,11 @@ import lists.LimitAndOffsetStudents2Impl;
 import lists.LimitAndOffsetStudents3Impl;
 import lists.LimitAndOffsetStudentsImpl;
 import lists.LimitedStudentsImpl;
+import lists.OrderedReportsImpl;
 import lists.OrderedStudentsImpl;
 import models.AnonymousUser;
 import models.OneTimePassword;
+import models.Report;
 import models.Student;
 import org.springframework.beans.factory.ObjectFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -28,6 +31,7 @@ import repository.jpa.AvatarRepository;
 import repository.jpa.OneTimePasswordRepository;
 import repository.jpa.ReportConfigOptionRepository;
 import repository.jpa.ReportConfigRepository;
+import repository.jpa.ReportRepository;
 import repository.jpa.StudentRepository;
 import repository.jpa.UserRepository;
 import repository.jpa.UserSessionRepository;
@@ -41,6 +45,7 @@ public class QueryProvider {
   @Autowired private AnonymousUserRepository anonymousUserRepository;
   @Autowired private AvatarRepository avatarRepository;
   @Autowired private OneTimePasswordRepository oneTimePasswordRepository;
+  @Autowired private ReportRepository reportRepository;
   @Autowired private ReportConfigRepository reportConfigRepository;
   @Autowired private ReportConfigOptionRepository reportConfigOptionRepository;
   @Autowired private StudentRepository studentRepository;
@@ -52,6 +57,7 @@ public class QueryProvider {
   @Autowired private LimitAndOffsetStudents3Impl limitAndOffsetStudents3Impl;
   @Autowired private LimitedStudentsImpl limitedStudentsImpl;
   @Autowired private OrderedStudentsImpl orderedStudentsImpl;
+  @Autowired private OrderedReportsImpl orderedReportsImpl;
   @Autowired private ObjectFactory<AppSessionProvider> provider;
 
   @PostConstruct
@@ -75,6 +81,11 @@ public class QueryProvider {
 
   public boolean checkTokenUniqueInOneTimePassword(long oneTimePasswordId, String token) {
     return oneTimePasswordRepository.checkTokenUnique(oneTimePasswordId, token);
+  }
+
+  public Report getReportById(long id) {
+    Optional<Report> findById = reportRepository.findById(id);
+    return findById.orElse(null);
   }
 
   public Student getStudentById(long id) {
@@ -104,6 +115,10 @@ public class QueryProvider {
 
   public OrderedStudents getOrderedStudents() {
     return orderedStudentsImpl.get();
+  }
+
+  public OrderedReports getOrderedReports() {
+    return orderedReportsImpl.get();
   }
 
   public LoginResult loginWithOTP(String token, String code) {

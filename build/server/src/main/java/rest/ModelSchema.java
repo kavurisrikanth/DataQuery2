@@ -12,6 +12,7 @@ import models.D3EImage;
 import models.D3EMessage;
 import models.EmailMessage;
 import models.OneTimePassword;
+import models.Report;
 import models.ReportConfig;
 import models.ReportConfigOption;
 import models.SMSMessage;
@@ -48,6 +49,7 @@ public class ModelSchema implements IModelSchema {
     addTable(new DModel<EmailMessage>("EmailMessage", "_email_message", DModelType.TRANSIENT));
     addTable(
         new DModel<OneTimePassword>("OneTimePassword", "_one_time_password", DModelType.ENTITY));
+    addTable(new DModel<Report>("Report", "_report", DModelType.ENTITY));
     addTable(new DModel<ReportConfig>("ReportConfig", "_report_config", DModelType.ENTITY));
     addTable(
         new DModel<ReportConfigOption>(
@@ -62,6 +64,7 @@ public class ModelSchema implements IModelSchema {
     addD3EMessageFields();
     addEmailMessageFields();
     addOneTimePasswordFields();
+    addReportFields();
     addReportConfigFields();
     addReportConfigOptionFields();
     addSMSMessageFields();
@@ -129,6 +132,13 @@ public class ModelSchema implements IModelSchema {
     m.addPrimitive("code", "_code", (s) -> s.getCode());
     m.addReference("user", "_user_id", getType("User"), (s) -> s.getUser());
     m.addPrimitive("expiry", "_expiry", (s) -> s.getExpiry());
+  }
+
+  private void addReportFields() {
+    DModel<Report> m = getType2("Report");
+    m.addPrimitive("id", "_id", (s) -> s.getId());
+    m.addPrimitive("marks", "_marks", (s) -> s.getMarks());
+    m.addReference("student", "_student_id", getType("Student"), (s) -> s.getStudent());
   }
 
   private void addReportConfigFields() {

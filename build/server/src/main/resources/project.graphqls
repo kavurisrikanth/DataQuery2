@@ -71,6 +71,7 @@ type Query
 	getAnonymousUserById ( id: Long ) : AnonymousUser
 	getOneTimePasswordById ( id: Long ) : OneTimePassword
 	checkTokenUniqueInOneTimePassword ( oneTimePasswordId: Long token: String ) : Boolean
+	getReportById ( id: Long ) : Report
 	getStudentById ( id: Long ) : Student
 	getAllStudents : AllStudents
 	getLimitedStudents : LimitedStudents
@@ -104,6 +105,8 @@ type Subscription
 	onAnonymousUserChangeEventById ( ids: [Long] ) : AnonymousUserChangeEvent
 	onOneTimePasswordChangeEvent : OneTimePasswordChangeEvent
 	onOneTimePasswordChangeEventById ( ids: [Long] ) : OneTimePasswordChangeEvent
+	onReportChangeEvent : ReportChangeEvent
+	onReportChangeEventById ( ids: [Long] ) : ReportChangeEvent
 	onStudentChangeEvent : StudentChangeEvent
 	onStudentChangeEventById ( ids: [Long] ) : StudentChangeEvent
 	onUserChangeEvent : UserChangeEvent
@@ -121,6 +124,12 @@ type AnonymousUserChangeEvent
 type OneTimePasswordChangeEvent
 {
 	model : OneTimePassword
+	changeType : ChangeEventType
+}
+
+type ReportChangeEvent
+{
+	model : Report
 	changeType : ChangeEventType
 }
 
@@ -255,6 +264,22 @@ input OneTimePasswordEntityInput
 	errorMsg : String
 	token : String
 	expiry : LocalDateTime
+}
+
+type Report
+	implements DBObject
+{
+	id : Long
+	localId : Long
+	marks : Float
+	student : Student
+}
+
+input ReportEntityInput
+{
+	id : Long
+	marks : Float
+	student : Long
 }
 
 type ReportConfig

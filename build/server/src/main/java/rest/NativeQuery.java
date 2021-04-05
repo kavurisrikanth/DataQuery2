@@ -12,6 +12,7 @@ import lists.LimitAndOffsetStudents2Impl;
 import lists.LimitAndOffsetStudents3Impl;
 import lists.LimitAndOffsetStudentsImpl;
 import lists.LimitedStudentsImpl;
+import lists.OrderedReportsImpl;
 import lists.OrderedStudentsImpl;
 import models.AnonymousUser;
 import models.OneTimePassword;
@@ -27,6 +28,7 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 import repository.jpa.AnonymousUserRepository;
 import repository.jpa.OneTimePasswordRepository;
+import repository.jpa.ReportRepository;
 import repository.jpa.StudentRepository;
 import repository.jpa.UserRepository;
 import repository.jpa.UserSessionRepository;
@@ -46,6 +48,7 @@ public class NativeQuery extends AbstractQueryService {
   @Autowired private JwtTokenUtil jwtTokenUtil;
   @Autowired private AnonymousUserRepository anonymousUserRepository;
   @Autowired private OneTimePasswordRepository oneTimePasswordRepository;
+  @Autowired private ReportRepository reportRepository;
   @Autowired private StudentRepository studentRepository;
   @Autowired private UserRepository userRepository;
   @Autowired private UserSessionRepository userSessionRepository;
@@ -57,6 +60,7 @@ public class NativeQuery extends AbstractQueryService {
   @Autowired private LimitAndOffsetStudents3Impl limitAndOffsetStudents3Impl;
   @Autowired private LimitedStudentsImpl limitedStudentsImpl;
   @Autowired private OrderedStudentsImpl orderedStudentsImpl;
+  @Autowired private OrderedReportsImpl orderedReportsImpl;
 
   @PostMapping(path = "/query", produces = MediaType.APPLICATION_JSON_VALUE)
   public String run(@RequestBody String query) throws Exception {
@@ -94,6 +98,10 @@ public class NativeQuery extends AbstractQueryService {
       case "getOneTimePasswordById":
         {
           return gqlToSql.execute("OneTimePassword", field, ctx.readLong("id"));
+        }
+      case "getReportById":
+        {
+          return gqlToSql.execute("Report", field, ctx.readLong("id"));
         }
       case "getStudentById":
         {

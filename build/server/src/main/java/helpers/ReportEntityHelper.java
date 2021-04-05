@@ -1,31 +1,29 @@
 package helpers;
 
-import graphql.input.StudentEntityInput;
+import graphql.input.ReportEntityInput;
 import models.Report;
 import models.Student;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import repository.jpa.ReportRepository;
-import repository.jpa.StudentRepository;
 import rest.GraphQLInputContext;
 import store.EntityHelper;
 import store.EntityMutator;
 import store.EntityValidationContext;
 import store.InputHelper;
 
-@Service("Student")
-public class StudentEntityHelper<T extends Student, I extends StudentEntityInput>
+@Service("Report")
+public class ReportEntityHelper<T extends Report, I extends ReportEntityInput>
     implements EntityHelper<T, I> {
   @Autowired protected EntityMutator mutator;
-  @Autowired private StudentRepository studentRepository;
   @Autowired private ReportRepository reportRepository;
 
   public void setMutator(EntityMutator obj) {
     mutator = obj;
   }
 
-  public Student newInstance() {
-    return new Student();
+  public Report newInstance() {
+    return new Report();
   }
 
   @Override
@@ -33,15 +31,18 @@ public class StudentEntityHelper<T extends Student, I extends StudentEntityInput
     if (input == null) {
       return null;
     }
-    T newStudent = ((T) new Student());
-    newStudent.setId(input.getId());
-    return fromInput(input, newStudent, helper);
+    T newReport = ((T) new Report());
+    newReport.setId(input.getId());
+    return fromInput(input, newReport, helper);
   }
 
   @Override
   public T fromInput(I input, T entity, InputHelper helper) {
-    if (helper.has("name")) {
-      entity.setName(input.name);
+    if (helper.has("marks")) {
+      entity.setMarks(input.marks);
+    }
+    if (helper.has("student")) {
+      entity.setStudent(helper.readRef("Student", input.student));
     }
     entity.updateMasters((o) -> {});
     return entity;
@@ -49,23 +50,38 @@ public class StudentEntityHelper<T extends Student, I extends StudentEntityInput
 
   @Override
   public void fromInput(T entity, GraphQLInputContext ctx) {
-    if (ctx.has("name")) {
-      entity.setName(ctx.readString("name"));
+    if (ctx.has("marks")) {
+      entity.setMarks(ctx.readDouble("marks"));
+    }
+    if (ctx.has("student")) {
+      entity.setStudent(ctx.readRef("student", "Student"));
     }
     entity.updateMasters((o) -> {});
   }
 
-  public StudentEntityInput toInput(T entity) {
-    I input = ((I) new StudentEntityInput());
+  public ReportEntityInput toInput(T entity) {
+    I input = ((I) new ReportEntityInput());
     input.setId(entity.getId());
-    input.name = entity.getName();
+    input.marks = entity.getMarks();
+    input.student = entity.getStudent().getId();
     return input;
   }
 
   public void referenceFromValidations(T entity, EntityValidationContext validationContext) {}
 
+  public void validateFieldStudent(
+      T entity, EntityValidationContext validationContext, boolean onCreate, boolean onUpdate) {
+    Student it = entity.getStudent();
+    if (it == null) {
+      validationContext.addFieldError("student", "student is required.");
+      return;
+    }
+  }
+
   public void validateInternal(
-      T entity, EntityValidationContext validationContext, boolean onCreate, boolean onUpdate) {}
+      T entity, EntityValidationContext validationContext, boolean onCreate, boolean onUpdate) {
+    validateFieldStudent(entity, validationContext, onCreate, onUpdate);
+  }
 
   public void validateOnCreate(T entity, EntityValidationContext validationContext) {
     validateInternal(entity, validationContext, true, false);
@@ -82,7 +98,7 @@ public class StudentEntityHelper<T extends Student, I extends StudentEntityInput
 
   @Override
   public T getById(long id) {
-    return id == 0l ? null : ((T) studentRepository.findById(id).orElse(null));
+    return id == 0l ? null : ((T) reportRepository.findById(id).orElse(null));
   }
 
   @Override
@@ -91,14 +107,7 @@ public class StudentEntityHelper<T extends Student, I extends StudentEntityInput
   @Override
   public void compute(T entity) {}
 
-  private void deleteStudentInReport(T entity, EntityValidationContext deletionContext) {
-    for (Report report : this.reportRepository.getByStudent(entity)) {
-      this.mutator.delete(report, true);
-    }
-  }
-
   public Boolean onDelete(T entity, boolean internal, EntityValidationContext deletionContext) {
-    this.deleteStudentInReport(entity, deletionContext);
     return true;
   }
 
