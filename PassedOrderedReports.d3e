@@ -1,0 +1,6 @@
+(DataQuery PassedOrderedReports {
+    query `
+        Report.all.where((r) => r.marks >= 40.0).orderBy((r) => r.student.name)
+    `
+    enableSync true
+})

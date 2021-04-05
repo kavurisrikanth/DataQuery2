@@ -14,8 +14,10 @@ import java.util.HashMap;
 import java.util.List;
 import lists.AllStudentsSubscriptionHelper;
 import lists.DataQueryChange;
+import lists.MyReportsSubscriptionHelper;
 import lists.OrderedReportsSubscriptionHelper;
 import lists.OrderedStudentsSubscriptionHelper;
+import lists.PassedOrderedReportsSubscriptionHelper;
 import org.json.JSONObject;
 import org.springframework.beans.factory.ObjectFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -32,8 +34,10 @@ public class NativeSubscription extends AbstractQueryService {
   @Autowired private IModelSchema schema;
   @Autowired private GqlToSql gqltosql;
   @Autowired private ObjectFactory<AllStudentsSubscriptionHelper> allStudents;
-  @Autowired private ObjectFactory<OrderedStudentsSubscriptionHelper> orderedStudents;
+  @Autowired private ObjectFactory<MyReportsSubscriptionHelper> myReports;
   @Autowired private ObjectFactory<OrderedReportsSubscriptionHelper> orderedReports;
+  @Autowired private ObjectFactory<OrderedStudentsSubscriptionHelper> orderedStudents;
+  @Autowired private ObjectFactory<PassedOrderedReportsSubscriptionHelper> passedOrderedReports;
 
   public Flowable<JSONObject> subscribe(JSONObject req) throws Exception {
     List<Field> fields = parseFields(req);
@@ -195,9 +199,9 @@ public class NativeSubscription extends AbstractQueryService {
               .subscribe(inspect(field, "data.items"))
               .map((e) -> fromDataQueryDataChange(e, field));
         }
-      case "onOrderedStudentsChange":
+      case "onMyReportsChange":
         {
-          return orderedStudents
+          return myReports
               .getObject()
               .subscribe(inspect(field, "data.items"))
               .map((e) -> fromDataQueryDataChange(e, field));
@@ -205,6 +209,20 @@ public class NativeSubscription extends AbstractQueryService {
       case "onOrderedReportsChange":
         {
           return orderedReports
+              .getObject()
+              .subscribe(inspect(field, "data.items"))
+              .map((e) -> fromDataQueryDataChange(e, field));
+        }
+      case "onOrderedStudentsChange":
+        {
+          return orderedStudents
+              .getObject()
+              .subscribe(inspect(field, "data.items"))
+              .map((e) -> fromDataQueryDataChange(e, field));
+        }
+      case "onPassedOrderedReportsChange":
+        {
+          return passedOrderedReports
               .getObject()
               .subscribe(inspect(field, "data.items"))
               .map((e) -> fromDataQueryDataChange(e, field));

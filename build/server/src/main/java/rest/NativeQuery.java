@@ -12,8 +12,10 @@ import lists.LimitAndOffsetStudents2Impl;
 import lists.LimitAndOffsetStudents3Impl;
 import lists.LimitAndOffsetStudentsImpl;
 import lists.LimitedStudentsImpl;
+import lists.MyReportsImpl;
 import lists.OrderedReportsImpl;
 import lists.OrderedStudentsImpl;
+import lists.PassedOrderedReportsImpl;
 import models.AnonymousUser;
 import models.OneTimePassword;
 import models.User;
@@ -39,7 +41,7 @@ import store.EntityHelperService;
 import store.EntityMutator;
 
 @RestController
-@RequestMapping("native/")
+@RequestMapping("api/native/")
 public class NativeQuery extends AbstractQueryService {
   @Autowired private EntityMutator mutator;
   @Autowired private ObjectFactory<EntityHelperService> helperService;
@@ -59,8 +61,10 @@ public class NativeQuery extends AbstractQueryService {
   @Autowired private LimitAndOffsetStudents2Impl limitAndOffsetStudents2Impl;
   @Autowired private LimitAndOffsetStudents3Impl limitAndOffsetStudents3Impl;
   @Autowired private LimitedStudentsImpl limitedStudentsImpl;
-  @Autowired private OrderedStudentsImpl orderedStudentsImpl;
+  @Autowired private MyReportsImpl myReportsImpl;
   @Autowired private OrderedReportsImpl orderedReportsImpl;
+  @Autowired private OrderedStudentsImpl orderedStudentsImpl;
+  @Autowired private PassedOrderedReportsImpl passedOrderedReportsImpl;
 
   @PostMapping(path = "/query", produces = MediaType.APPLICATION_JSON_VALUE)
   public String run(@RequestBody String query) throws Exception {

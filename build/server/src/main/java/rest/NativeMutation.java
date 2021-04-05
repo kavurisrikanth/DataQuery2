@@ -37,7 +37,7 @@ import store.EntityMutator;
 import store.ValidationFailedException;
 
 @org.springframework.web.bind.annotation.RestController
-@RequestMapping("native/")
+@RequestMapping("api/native/")
 public class NativeMutation extends AbstractQueryService {
   @Autowired private EntityMutator mutator;
   @Autowired private ObjectFactory<EntityHelperService> helperService;

@@ -1,0 +1,6 @@
+(DataQuery MyReports {
+    query `
+        Report.all.where((r) => r.student.name == 'Srikanth')
+    `
+    enableSync true
+})

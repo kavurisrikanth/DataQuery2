@@ -8,8 +8,10 @@ import classes.LimitAndOffsetStudents3;
 import classes.LimitAndOffsetStudents3Request;
 import classes.LimitedStudents;
 import classes.LoginResult;
+import classes.MyReports;
 import classes.OrderedReports;
 import classes.OrderedStudents;
+import classes.PassedOrderedReports;
 import java.util.Optional;
 import javax.annotation.PostConstruct;
 import lists.AllStudentsImpl;
@@ -17,8 +19,10 @@ import lists.LimitAndOffsetStudents2Impl;
 import lists.LimitAndOffsetStudents3Impl;
 import lists.LimitAndOffsetStudentsImpl;
 import lists.LimitedStudentsImpl;
+import lists.MyReportsImpl;
 import lists.OrderedReportsImpl;
 import lists.OrderedStudentsImpl;
+import lists.PassedOrderedReportsImpl;
 import models.AnonymousUser;
 import models.OneTimePassword;
 import models.Report;
@@ -56,8 +60,10 @@ public class QueryProvider {
   @Autowired private LimitAndOffsetStudents2Impl limitAndOffsetStudents2Impl;
   @Autowired private LimitAndOffsetStudents3Impl limitAndOffsetStudents3Impl;
   @Autowired private LimitedStudentsImpl limitedStudentsImpl;
-  @Autowired private OrderedStudentsImpl orderedStudentsImpl;
+  @Autowired private MyReportsImpl myReportsImpl;
   @Autowired private OrderedReportsImpl orderedReportsImpl;
+  @Autowired private OrderedStudentsImpl orderedStudentsImpl;
+  @Autowired private PassedOrderedReportsImpl passedOrderedReportsImpl;
   @Autowired private ObjectFactory<AppSessionProvider> provider;
 
   @PostConstruct
@@ -113,12 +119,20 @@ public class QueryProvider {
     return limitedStudentsImpl.get();
   }
 
-  public OrderedStudents getOrderedStudents() {
-    return orderedStudentsImpl.get();
+  public MyReports getMyReports() {
+    return myReportsImpl.get();
   }
 
   public OrderedReports getOrderedReports() {
     return orderedReportsImpl.get();
+  }
+
+  public OrderedStudents getOrderedStudents() {
+    return orderedStudentsImpl.get();
+  }
+
+  public PassedOrderedReports getPassedOrderedReports() {
+    return passedOrderedReportsImpl.get();
   }
 
   public LoginResult loginWithOTP(String token, String code) {
