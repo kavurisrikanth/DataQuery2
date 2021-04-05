@@ -14,7 +14,7 @@ import graphql.language.Field;
 import graphql.language.NodeUtil.GetOperationResult;
 
 @RestController
-@RequestMapping("native/")
+@RequestMapping("api/native/")
 public class NativeGraphQL extends AbstractQueryService {
 
 	@Autowired

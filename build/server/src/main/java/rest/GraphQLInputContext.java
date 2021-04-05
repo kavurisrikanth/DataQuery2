@@ -1,6 +1,7 @@
 package rest;
 
 import java.time.Duration;
+import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.LocalTime;
 import java.util.List;
@@ -185,4 +186,6 @@ public abstract class GraphQLInputContext {
 	public abstract LocalDateTime readDateTime(String field);
 
 	public abstract LocalTime readTime(String field);
+
+	public abstract LocalDate readDate(String field);
 }

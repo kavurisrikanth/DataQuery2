@@ -12,6 +12,7 @@ import lists.LimitAndOffsetStudents2Impl;
 import lists.LimitAndOffsetStudents3Impl;
 import lists.LimitAndOffsetStudentsImpl;
 import lists.LimitedStudentsImpl;
+import lists.MyOrderedReportsImpl;
 import lists.MyReportsImpl;
 import lists.OrderedReportsImpl;
 import lists.OrderedStudentsImpl;
@@ -61,6 +62,7 @@ public class NativeQuery extends AbstractQueryService {
   @Autowired private LimitAndOffsetStudents2Impl limitAndOffsetStudents2Impl;
   @Autowired private LimitAndOffsetStudents3Impl limitAndOffsetStudents3Impl;
   @Autowired private LimitedStudentsImpl limitedStudentsImpl;
+  @Autowired private MyOrderedReportsImpl myOrderedReportsImpl;
   @Autowired private MyReportsImpl myReportsImpl;
   @Autowired private OrderedReportsImpl orderedReportsImpl;
   @Autowired private OrderedStudentsImpl orderedStudentsImpl;

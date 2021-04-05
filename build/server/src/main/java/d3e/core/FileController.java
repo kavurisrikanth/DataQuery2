@@ -34,8 +34,7 @@ public class FileController {
     @Autowired
     private D3ETempResourceHandler saveHandler;
 
-    @CrossOrigin(origins = "*")
-    @PostMapping("/upload")
+    @PostMapping("/api/upload")
     public DFile uploadFile(@RequestParam("file") MultipartFile multiFile) {
         String fileName = multiFile.getOriginalFilename();
         try {
@@ -46,13 +45,13 @@ public class FileController {
         }
     }
 
-    @PostMapping("/uploads")
+    @PostMapping("/api/uploads")
     public List<DFile> uploadMultipleFiles(@RequestParam("files") MultipartFile[] files) {
         return Arrays.asList(files).stream().map(file -> uploadFile(file)).collect(Collectors.toList());
     }
 
     @CrossOrigin(origins = "*")
-    @GetMapping("/download/{fileName:.+}")
+    @GetMapping("/api/download/{fileName:.+}")
     public ResponseEntity<Resource> download(@PathVariable String fileName,
             @RequestParam(required = false) String originalName, @RequestParam(required = false) Integer width,
             @RequestParam(required = false) Integer height, HttpServletRequest request) {

@@ -82,7 +82,7 @@ public class MyReportsSubscriptionHelper implements FlowableOnSubscribe<DataQuer
   private List<Disposable> disposables = ListExt.List();
   private Output output;
   private Field field;
-  private Map<Long, List<Row>> studentRows = MapExt.Map();
+  private Map<Long, List<Row>> a__student_id_Rows = MapExt.Map();
 
   @Async
   public void handleContextStart(DataQueryDataChange event) {
@@ -140,7 +140,7 @@ public class MyReportsSubscriptionHelper implements FlowableOnSubscribe<DataQuer
                     return;
                   }
                   Student value = e.model;
-                  List<Row> row0 = studentRows.get(value.getId());
+                  List<Row> row0 = a__student_id_Rows.get(value.getId());
                   if (row0 == null) {
                     /*
                     TODO: Generate the proper condition here
@@ -149,7 +149,10 @@ public class MyReportsSubscriptionHelper implements FlowableOnSubscribe<DataQuer
                       loadInitialData();
                     }
                   } else {
-                    row0.forEach((r) -> applyWhereStudent(r, value));
+                    row0.forEach(
+                        (r) -> {
+                          applyWhereStudent(r, value);
+                        });
                   }
                 });
     disposables.add(StudentSubscribe);
@@ -296,7 +299,7 @@ public class MyReportsSubscriptionHelper implements FlowableOnSubscribe<DataQuer
                     NativeObj base = wrappedBase.getRef(2);
                     if (base != null) {
                       NativeObj ref0 = base.getRef(1);
-                      updateData(ref0, studentRows, r, false);
+                      updateData(ref0, a__student_id_Rows, r, false);
                     }
                   });
           break;
@@ -309,7 +312,7 @@ public class MyReportsSubscriptionHelper implements FlowableOnSubscribe<DataQuer
           NativeObj base = wrappedBase.getRef(2);
           if (base != null) {
             NativeObj ref0 = base.getRef(1);
-            updateData(ref0, studentRows, delRow, true);
+            updateData(ref0, a__student_id_Rows, delRow, true);
           }
           break;
         }
@@ -323,7 +326,7 @@ public class MyReportsSubscriptionHelper implements FlowableOnSubscribe<DataQuer
           NativeObj base = wrappedBase.getRef(2);
           if (base != null) {
             NativeObj ref0 = base.getRef(1);
-            updateData(ref0, studentRows, newRow, false);
+            updateData(ref0, a__student_id_Rows, newRow, false);
           }
           break;
         }

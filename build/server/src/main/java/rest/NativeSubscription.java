@@ -14,6 +14,7 @@ import java.util.HashMap;
 import java.util.List;
 import lists.AllStudentsSubscriptionHelper;
 import lists.DataQueryChange;
+import lists.MyOrderedReportsSubscriptionHelper;
 import lists.MyReportsSubscriptionHelper;
 import lists.OrderedReportsSubscriptionHelper;
 import lists.OrderedStudentsSubscriptionHelper;
@@ -34,6 +35,7 @@ public class NativeSubscription extends AbstractQueryService {
   @Autowired private IModelSchema schema;
   @Autowired private GqlToSql gqltosql;
   @Autowired private ObjectFactory<AllStudentsSubscriptionHelper> allStudents;
+  @Autowired private ObjectFactory<MyOrderedReportsSubscriptionHelper> myOrderedReports;
   @Autowired private ObjectFactory<MyReportsSubscriptionHelper> myReports;
   @Autowired private ObjectFactory<OrderedReportsSubscriptionHelper> orderedReports;
   @Autowired private ObjectFactory<OrderedStudentsSubscriptionHelper> orderedStudents;
@@ -195,6 +197,13 @@ public class NativeSubscription extends AbstractQueryService {
       case "onAllStudentsChange":
         {
           return allStudents
+              .getObject()
+              .subscribe(inspect(field, "data.items"))
+              .map((e) -> fromDataQueryDataChange(e, field));
+        }
+      case "onMyOrderedReportsChange":
+        {
+          return myOrderedReports
               .getObject()
               .subscribe(inspect(field, "data.items"))
               .map((e) -> fromDataQueryDataChange(e, field));

@@ -16,6 +16,7 @@ import io.reactivex.rxjava3.disposables.Disposable;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
+import java.util.stream.Collectors;
 import models.Report;
 import models.Student;
 import models.User;
@@ -71,7 +72,7 @@ public class PassedOrderedReportsSubscriptionHelper
       return this.rows.remove(id);
     }
 
-    public String getPath(String _orderBy0) {
+    public long getPath(String _orderBy0) {
       long index = 0;
       for (OrderBy orderBy : this.orderByList) {
         if (!(orderBy.fallsBefore(_orderBy0))) {
@@ -79,19 +80,24 @@ public class PassedOrderedReportsSubscriptionHelper
         }
         index++;
       }
-      if (index == this.rows.size()) {
-        return "-1";
-      }
       for (OrderBy orderBy : this.orderByList) {
         if (!(orderBy.fallsBefore(_orderBy0))) {
           break;
         }
         index++;
       }
-      if (index == this.rows.size()) {
-        return "-1";
-      }
-      return Long.toString(index);
+      return index;
+    }
+
+    public void moveRow(Row row, int newIndex) {
+      int oldIndex = row.index;
+      this.rows.values().stream()
+          .filter((one) -> one.index > oldIndex)
+          .forEach((one) -> one.index--);
+      this.rows.values().stream()
+          .filter((one) -> one.index >= newIndex)
+          .forEach((one) -> one.index++);
+      row.index = newIndex;
     }
   }
 
@@ -125,6 +131,10 @@ public class PassedOrderedReportsSubscriptionHelper
       }
       return true;
     }
+
+    public void update(String _orderBy0) {
+      this._orderBy0 = _orderBy0;
+    }
   }
 
   @Autowired private TransactionWrapper transactional;
@@ -135,7 +145,7 @@ public class PassedOrderedReportsSubscriptionHelper
   private List<Disposable> disposables = ListExt.List();
   private Output output;
   private Field field;
-  private Map<Long, List<Row>> studentRows = MapExt.Map();
+  private Map<Long, List<Row>> a__student_id_Rows = MapExt.Map();
 
   @Async
   public void handleContextStart(DataQueryDataChange event) {
@@ -193,6 +203,20 @@ public class PassedOrderedReportsSubscriptionHelper
                     return;
                   }
                   Student value = e.model;
+                  List<Row> row0 = a__student_id_Rows.get(value.getId());
+                  if (row0 == null) {
+                    /*
+                    TODO: Generate the proper condition here
+                    */
+                    if (false) {
+                      loadInitialData();
+                    }
+                  } else {
+                    row0.forEach(
+                        (r) -> {
+                          applyOrderStudent(r, value);
+                        });
+                  }
                 });
     disposables.add(StudentSubscribe);
   }
@@ -255,7 +279,8 @@ public class PassedOrderedReportsSubscriptionHelper
     DataQueryDataChange change = new DataQueryDataChange();
     change.nativeData = createReportData(model);
     change.changeType = SubscriptionChangeType.Insert;
-    change.path = this.output.getPath(model.getStudent().getName());
+    long index = this.output.getPath(model.getStudent().getName());
+    change.path = index == output.rows.size() ? "-1" : Long.toString(index);
     change.index = output.rows.size();
     changes.add(change);
   }
@@ -302,10 +327,20 @@ public class PassedOrderedReportsSubscriptionHelper
     if (row == null) {
       return;
     }
+    String _orderBy0 = model.getStudent().getName();
+    long index = this.output.getPath(_orderBy0);
+    createPathChangeChange(changes, row, index);
+    this.output.orderByList.stream()
+        .filter((one) -> one.row.equals(row))
+        .forEach((one) -> one.update(_orderBy0));
+  }
+
+  private void createPathChangeChange(List<DataQueryDataChange> changes, Row row, long index) {
     DataQueryDataChange change = new DataQueryDataChange();
     change.changeType = SubscriptionChangeType.PathChange;
     change.oldPath = row.path;
-    change.path = this.output.getPath(model.getStudent().getName());
+    change.index = ((int) index);
+    change.path = Long.toString(index);
     changes.add(change);
   }
 
@@ -362,7 +397,7 @@ public class PassedOrderedReportsSubscriptionHelper
                     NativeObj base = wrappedBase.getRef(3);
                     if (base != null) {
                       NativeObj ref0 = base.getRef(2);
-                      updateData(ref0, studentRows, r, false);
+                      updateData(ref0, a__student_id_Rows, r, false);
                     }
                   });
           break;
@@ -375,7 +410,7 @@ public class PassedOrderedReportsSubscriptionHelper
           NativeObj base = wrappedBase.getRef(3);
           if (base != null) {
             NativeObj ref0 = base.getRef(2);
-            updateData(ref0, studentRows, delRow, true);
+            updateData(ref0, a__student_id_Rows, delRow, true);
           }
           break;
         }
@@ -389,7 +424,7 @@ public class PassedOrderedReportsSubscriptionHelper
           NativeObj base = wrappedBase.getRef(3);
           if (base != null) {
             NativeObj ref0 = base.getRef(2);
-            updateData(ref0, studentRows, newRow, false);
+            updateData(ref0, a__student_id_Rows, newRow, false);
           }
           break;
         }
@@ -410,12 +445,34 @@ public class PassedOrderedReportsSubscriptionHelper
             return;
           }
           row.path = newPath;
+          this.output.moveRow(row, change.index);
           break;
         }
       default:
         {
           break;
         }
+    }
+  }
+
+  private void applyOrderStudent(Row r, Student student) {
+    NativeObj wrappedBase = r.row;
+    NativeObj base = wrappedBase.getRef(3);
+    List<OrderBy> orderBys =
+        this.output.orderByList.stream()
+            .filter((one) -> one.row.equals(r))
+            .collect(Collectors.toList());
+    boolean changed = Objects.equals(base.getString(1), base.getString(1));
+    if (changed) {
+      String _orderBy0 = base.getString(1);
+      List<DataQueryDataChange> changes = ListExt.List();
+      orderBys.forEach(
+          (one) -> {
+            long index = this.output.getPath(_orderBy0);
+            one._orderBy0 = _orderBy0;
+            createPathChangeChange(changes, r, index);
+          });
+      pushChanges(changes);
     }
   }
 }

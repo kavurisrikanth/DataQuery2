@@ -8,6 +8,7 @@ import classes.LimitAndOffsetStudents3;
 import classes.LimitAndOffsetStudents3Request;
 import classes.LimitedStudents;
 import classes.LoginResult;
+import classes.MyOrderedReports;
 import classes.MyReports;
 import classes.OrderedReports;
 import classes.OrderedStudents;
@@ -19,6 +20,7 @@ import lists.LimitAndOffsetStudents2Impl;
 import lists.LimitAndOffsetStudents3Impl;
 import lists.LimitAndOffsetStudentsImpl;
 import lists.LimitedStudentsImpl;
+import lists.MyOrderedReportsImpl;
 import lists.MyReportsImpl;
 import lists.OrderedReportsImpl;
 import lists.OrderedStudentsImpl;
@@ -60,6 +62,7 @@ public class QueryProvider {
   @Autowired private LimitAndOffsetStudents2Impl limitAndOffsetStudents2Impl;
   @Autowired private LimitAndOffsetStudents3Impl limitAndOffsetStudents3Impl;
   @Autowired private LimitedStudentsImpl limitedStudentsImpl;
+  @Autowired private MyOrderedReportsImpl myOrderedReportsImpl;
   @Autowired private MyReportsImpl myReportsImpl;
   @Autowired private OrderedReportsImpl orderedReportsImpl;
   @Autowired private OrderedStudentsImpl orderedStudentsImpl;
@@ -117,6 +120,10 @@ public class QueryProvider {
 
   public LimitedStudents getLimitedStudents() {
     return limitedStudentsImpl.get();
+  }
+
+  public MyOrderedReports getMyOrderedReports() {
+    return myOrderedReportsImpl.get();
   }
 
   public MyReports getMyReports() {

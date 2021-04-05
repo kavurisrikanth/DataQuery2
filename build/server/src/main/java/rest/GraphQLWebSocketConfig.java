@@ -33,7 +33,7 @@ import security.AppSessionProvider;
 @EnableWebSocket
 public class GraphQLWebSocketConfig implements WebSocketConfigurer {
 
-	@Value("${api.native.subscription:/native/subscriptions}")
+	@Value("${api.native.subscription:/api/native/subscriptions}")
 	private String subscriptionPath;
 
 	@Autowired

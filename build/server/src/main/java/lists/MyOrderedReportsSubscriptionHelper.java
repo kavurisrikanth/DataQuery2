@@ -16,6 +16,8 @@ import io.reactivex.rxjava3.disposables.Disposable;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
+import java.util.stream.Collectors;
+import models.Report;
 import models.Student;
 import models.User;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -27,7 +29,8 @@ import store.StoreEventType;
 
 @Component
 @Scope(ConfigurableBeanFactory.SCOPE_PROTOTYPE)
-public class OrderedStudentsSubscriptionHelper implements FlowableOnSubscribe<DataQueryDataChange> {
+public class MyOrderedReportsSubscriptionHelper
+    implements FlowableOnSubscribe<DataQueryDataChange> {
   private class Output {
     Map<Long, Row> rows = MapExt.Map();
     List<OrderBy> orderByList = ListExt.List();
@@ -37,7 +40,7 @@ public class OrderedStudentsSubscriptionHelper implements FlowableOnSubscribe<Da
         NativeObj wrappedBase = rows.get(i);
         Row row = new Row("" + i, wrappedBase, i);
         this.rows.put(wrappedBase.getId(), row);
-        NativeObj base = wrappedBase.getRef(1);
+        NativeObj base = wrappedBase.getRef(2);
         String _orderBy0 = base.getString(0);
         this.orderByList.add(new OrderBy(_orderBy0, row));
       }
@@ -54,7 +57,7 @@ public class OrderedStudentsSubscriptionHelper implements FlowableOnSubscribe<Da
           .forEach((one) -> one.index++);
       this.rows.put(id, row);
       NativeObj wrappedBase = row.row;
-      NativeObj base = wrappedBase.getRef(1);
+      NativeObj base = wrappedBase.getRef(2);
       String _orderBy0 = base.getString(0);
       this.orderByList.add(new OrderBy(_orderBy0, row));
     }
@@ -71,6 +74,12 @@ public class OrderedStudentsSubscriptionHelper implements FlowableOnSubscribe<Da
 
     public long getPath(String _orderBy0) {
       long index = 0;
+      for (OrderBy orderBy : this.orderByList) {
+        if (!(orderBy.fallsBefore(_orderBy0))) {
+          break;
+        }
+        index++;
+      }
       for (OrderBy orderBy : this.orderByList) {
         if (!(orderBy.fallsBefore(_orderBy0))) {
           break;
@@ -129,19 +138,20 @@ public class OrderedStudentsSubscriptionHelper implements FlowableOnSubscribe<Da
   }
 
   @Autowired private TransactionWrapper transactional;
-  @Autowired private OrderedStudentsImpl orderedStudentsImpl;
+  @Autowired private MyOrderedReportsImpl myOrderedReportsImpl;
   @Autowired private D3ESubscription subscription;
   private Flowable<DataQueryDataChange> flowable;
   private FlowableEmitter<DataQueryDataChange> emitter;
   private List<Disposable> disposables = ListExt.List();
   private Output output;
   private Field field;
+  private Map<Long, List<Row>> a__student_id_Rows = MapExt.Map();
 
   @Async
   public void handleContextStart(DataQueryDataChange event) {
     updateData(event);
     try {
-      event.data = orderedStudentsImpl.getAsJson(field, event.nativeData);
+      event.data = myOrderedReportsImpl.getAsJson(field, event.nativeData);
       event.nativeData = null;
     } catch (Exception e) {
     }
@@ -157,7 +167,7 @@ public class OrderedStudentsSubscriptionHelper implements FlowableOnSubscribe<Da
   private void loadInitialData() {
     DataQueryDataChange change = new DataQueryDataChange();
     change.changeType = SubscriptionChangeType.All;
-    change.nativeData = orderedStudentsImpl.getNativeResult();
+    change.nativeData = myOrderedReportsImpl.getNativeResult();
     handleContextStart(change);
   }
 
@@ -182,21 +192,48 @@ public class OrderedStudentsSubscriptionHelper implements FlowableOnSubscribe<Da
     A listener is added by default on the Table from which we pull the data, since any change in that must trigger a subscription change.
     */
     Disposable baseSubscribe =
-        ((Flowable<D3ESubscriptionEvent<Student>>) subscription.onStudentChangeEvent())
-            .subscribe((e) -> applyStudent(e));
+        ((Flowable<D3ESubscriptionEvent<Report>>) subscription.onReportChangeEvent())
+            .subscribe((e) -> applyReport(e));
     disposables.add(baseSubscribe);
+    Disposable StudentSubscribe =
+        ((Flowable<D3ESubscriptionEvent<Student>>) subscription.onStudentChangeEvent())
+            .subscribe(
+                (e) -> {
+                  if (e.changeType != StoreEventType.Update) {
+                    return;
+                  }
+                  Student value = e.model;
+                  List<Row> row0 = a__student_id_Rows.get(value.getId());
+                  if (row0 == null) {
+                    /*
+                    TODO: Generate the proper condition here
+                    */
+                    if (false) {
+                      loadInitialData();
+                    }
+                  } else {
+                    row0.forEach(
+                        (r) -> {
+                          applyWhereStudent(r, value);
+                          applyOrderStudent(r, value);
+                        });
+                  }
+                });
+    disposables.add(StudentSubscribe);
   }
 
-  public void applyStudent(D3ESubscriptionEvent<Student> e) {
+  public void applyReport(D3ESubscriptionEvent<Report> e) {
     List<DataQueryDataChange> changes = ListExt.List();
-    Student model = e.model;
+    Report model = e.model;
     StoreEventType type = e.changeType;
     if (type == StoreEventType.Insert) {
       /*
       New data is inserted
       So we just insert the new data depending on the clauses.
       */
-      createInsertChange(changes, model);
+      if (applyWhere(model)) {
+        createInsertChange(changes, model);
+      }
     } else if (type == StoreEventType.Delete) {
       /*
       Existing data is deleted
@@ -206,27 +243,68 @@ public class OrderedStudentsSubscriptionHelper implements FlowableOnSubscribe<Da
       /*
       Existing data is updated
       */
-      Student old = model.getOld();
+      Report old = model.getOld();
       if (old == null) {
         return;
       }
-      createPathChangeChange(changes, model, old);
+      boolean currentMatch = applyWhere(model);
+      boolean oldMatch = applyWhere(old);
+      if (currentMatch == oldMatch) {
+        if (!(currentMatch) && !(oldMatch)) {
+          return;
+        }
+        if (currentMatch && oldMatch) {
+          createPathChangeChange(changes, model, old);
+        }
+        return;
+      }
+      if (oldMatch) {
+        createUpdateChange(changes, model);
+      } else {
+        if (oldMatch) {
+          createDeleteChange(changes, model);
+        }
+        if (currentMatch) {
+          createInsertChange(changes, model);
+        }
+      }
     }
     pushChanges(changes);
   }
 
-  private void createInsertChange(List<DataQueryDataChange> changes, Student model) {
+  private boolean applyWhere(Report model) {
+    return Objects.equals(model.getStudent().getName(), "Srikanth");
+  }
+
+  private void createInsertChange(List<DataQueryDataChange> changes, Report model) {
     DataQueryDataChange change = new DataQueryDataChange();
-    change.nativeData = createStudentData(model);
+    change.nativeData = createReportData(model);
     change.changeType = SubscriptionChangeType.Insert;
-    long index = this.output.getPath(model.getName());
+    long index = this.output.getPath(model.getStudent().getName());
     change.path = index == output.rows.size() ? "-1" : Long.toString(index);
     change.index = output.rows.size();
     changes.add(change);
   }
 
-  private void createDeleteChange(List<DataQueryDataChange> changes, Student model) {
+  private void createUpdateChange(List<DataQueryDataChange> changes, Report model) {
     Row row = output.get(model.getId());
+    if (row == null) {
+      return;
+    }
+    DataQueryDataChange change = new DataQueryDataChange();
+    change.changeType = SubscriptionChangeType.Update;
+    change.path = row.path;
+    change.index = row.index;
+    change.nativeData = ListExt.asList(row.row);
+    changes.add(change);
+  }
+
+  private void createDeleteChange(List<DataQueryDataChange> changes, Report model) {
+    Row row = output.get(model.getId());
+    createDeleteChange(changes, row);
+  }
+
+  private void createDeleteChange(List<DataQueryDataChange> changes, Row row) {
     if (row == null) {
       return;
     }
@@ -238,12 +316,11 @@ public class OrderedStudentsSubscriptionHelper implements FlowableOnSubscribe<Da
     changes.add(change);
   }
 
-  private void createPathChangeChange(
-      List<DataQueryDataChange> changes, Student model, Student old) {
+  private void createPathChangeChange(List<DataQueryDataChange> changes, Report model, Report old) {
     boolean changed =
-        old.getName() != null
-            && model.getName() != null
-            && old.getName().compareTo(model.getName()) != 0;
+        old.getStudent().getName() != null
+            && model.getStudent().getName() != null
+            && old.getStudent().getName().compareTo(model.getStudent().getName()) != 0;
     if (!(changed)) {
       return;
     }
@@ -251,7 +328,7 @@ public class OrderedStudentsSubscriptionHelper implements FlowableOnSubscribe<Da
     if (row == null) {
       return;
     }
-    String _orderBy0 = model.getName();
+    String _orderBy0 = model.getStudent().getName();
     long index = this.output.getPath(_orderBy0);
     createPathChangeChange(changes, row, index);
     this.output.orderByList.stream()
@@ -268,12 +345,15 @@ public class OrderedStudentsSubscriptionHelper implements FlowableOnSubscribe<Da
     changes.add(change);
   }
 
-  private List<NativeObj> createStudentData(Student student) {
+  private List<NativeObj> createReportData(Report report) {
     List<NativeObj> data = ListExt.List();
-    NativeObj row = new NativeObj(2);
-    row.set(0, student.getName());
-    row.set(1, student.getId());
-    row.setId(1);
+    NativeObj row = new NativeObj(3);
+    row.set(0, report.getStudent().getName());
+    row.set(1, report.getStudent().getId());
+    row.set(0, report.getStudent().getName());
+    row.set(1, report.getStudent().getId());
+    row.set(2, report.getId());
+    row.setId(2);
     data.add(row);
     return data;
   }
@@ -285,17 +365,58 @@ public class OrderedStudentsSubscriptionHelper implements FlowableOnSubscribe<Da
         });
   }
 
+  private void updateData(NativeObj ref, Map<Long, List<Row>> rows, Row thisRow, boolean remove) {
+    if (ref == null) {
+      return;
+    }
+    List<Row> list = rows.get(ref.getId());
+    if (list == null) {
+      if (remove) {
+        return;
+      }
+      list = ListExt.List();
+      rows.put(ref.getId(), list);
+    }
+    if (remove) {
+      list.remove(thisRow);
+    } else {
+      list.add(thisRow);
+    }
+  }
+
   private void updateData(DataQueryDataChange change) {
     switch (change.changeType) {
       case All:
         {
           this.output = new Output(change.nativeData);
+          this.output
+              .rows
+              .values()
+              .forEach(
+                  (r) -> {
+                    NativeObj wrappedBase = r.row;
+                    NativeObj base = wrappedBase.getRef(2);
+                    if (base != null) {
+                      NativeObj ref0 = base.getRef(1);
+                      updateData(ref0, a__student_id_Rows, r, false);
+                      NativeObj ref1 = base.getRef(1);
+                      updateData(ref1, a__student_id_Rows, r, false);
+                    }
+                  });
           break;
         }
       case Delete:
         {
           NativeObj del = change.nativeData.get(0);
-          output.deleteRow(del.getId());
+          Row delRow = output.deleteRow(del.getId());
+          NativeObj wrappedBase = delRow.row;
+          NativeObj base = wrappedBase.getRef(2);
+          if (base != null) {
+            NativeObj ref0 = base.getRef(1);
+            updateData(ref0, a__student_id_Rows, delRow, true);
+            NativeObj ref1 = base.getRef(1);
+            updateData(ref1, a__student_id_Rows, delRow, true);
+          }
           break;
         }
       case Insert:
@@ -304,6 +425,14 @@ public class OrderedStudentsSubscriptionHelper implements FlowableOnSubscribe<Da
           String path = change.path.equals("-1") ? output.rows.size() + "" : change.path;
           Row newRow = new Row(path, add, change.index);
           output.insertRow(add.getId(), newRow);
+          NativeObj wrappedBase = newRow.row;
+          NativeObj base = wrappedBase.getRef(2);
+          if (base != null) {
+            NativeObj ref0 = base.getRef(1);
+            updateData(ref0, a__student_id_Rows, newRow, false);
+            NativeObj ref1 = base.getRef(1);
+            updateData(ref1, a__student_id_Rows, newRow, false);
+          }
           break;
         }
       case Update:
@@ -330,6 +459,38 @@ public class OrderedStudentsSubscriptionHelper implements FlowableOnSubscribe<Da
         {
           break;
         }
+    }
+  }
+
+  private void applyWhereStudent(Row r, Student student) {
+    NativeObj wrappedBase = r.row;
+    NativeObj base = wrappedBase.getRef(2);
+    boolean matched = Objects.equals(student.getName(), "Srikanth");
+    if (!(matched)) {
+      List<DataQueryDataChange> changes = ListExt.List();
+      createDeleteChange(changes, r);
+      pushChanges(changes);
+    }
+  }
+
+  private void applyOrderStudent(Row r, Student student) {
+    NativeObj wrappedBase = r.row;
+    NativeObj base = wrappedBase.getRef(2);
+    List<OrderBy> orderBys =
+        this.output.orderByList.stream()
+            .filter((one) -> one.row.equals(r))
+            .collect(Collectors.toList());
+    boolean changed = Objects.equals(base.getString(0), base.getString(0));
+    if (changed) {
+      String _orderBy0 = base.getString(0);
+      List<DataQueryDataChange> changes = ListExt.List();
+      orderBys.forEach(
+          (one) -> {
+            long index = this.output.getPath(_orderBy0);
+            one._orderBy0 = _orderBy0;
+            createPathChangeChange(changes, r, index);
+          });
+      pushChanges(changes);
     }
   }
 }

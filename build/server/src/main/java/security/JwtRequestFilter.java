@@ -27,12 +27,12 @@ public class JwtRequestFilter extends OncePerRequestFilter {
     // 1) From Headers for /graphql
     // For subscriptions we set token from the Subscription class.
     // Each method
-    if (request.getRequestURI().startsWith("/rest/") || request.getRequestURI().startsWith("/native/")) {
+    if (request.getRequestURI().startsWith("/api/")) {
       if (Objects.equals(request.getMethod(), "OPTIONS")) {
         response.addHeader("Access-Control-Allow-Headers", "Authorization, Content-Type");
       }
       response.addHeader("Access-Control-Allow-Origin", "*");
-      response.addHeader("Content-Type", "application/json;charset=UTF-8");
+      response.addHeader("Content-Type", request.getContentType());
     }
     String token = null;
     String requestTokenHeader = request.getHeader("Authorization");

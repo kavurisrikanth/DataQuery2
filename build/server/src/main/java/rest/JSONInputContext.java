@@ -1,6 +1,7 @@
 package rest;
 
 import java.time.Duration;
+import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.LocalTime;
 import java.util.ArrayList;
@@ -290,6 +291,11 @@ public class JSONInputContext extends GraphQLInputContext implements IDocumentRe
 
 	@Override
 	public LocalDateTime readDateTime(String field) {
+		throw new RuntimeException("Unsupported");
+	}
+
+	@Override
+	public LocalDate readDate(String field) {
 		throw new RuntimeException("Unsupported");
 	}
 
