@@ -186,20 +186,13 @@ public class MyReportsSubscriptionHelper implements FlowableOnSubscribe<DataQuer
       boolean currentMatch = applyWhere(model);
       boolean oldMatch = applyWhere(old);
       if (currentMatch == oldMatch) {
-        if (!(currentMatch) && !(oldMatch)) {
-          return;
-        }
         return;
       }
       if (oldMatch) {
-        createUpdateChange(changes, model);
-      } else {
-        if (oldMatch) {
-          createDeleteChange(changes, model);
-        }
-        if (currentMatch) {
-          createInsertChange(changes, model);
-        }
+        createDeleteChange(changes, model);
+      }
+      if (currentMatch) {
+        createInsertChange(changes, model);
       }
     }
     pushChanges(changes);

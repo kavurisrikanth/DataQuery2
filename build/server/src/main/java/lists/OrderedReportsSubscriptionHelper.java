@@ -237,7 +237,10 @@ public class OrderedReportsSubscriptionHelper implements FlowableOnSubscribe<Dat
       if (old == null) {
         return;
       }
-      createPathChangeChange(changes, model, old);
+      if (createPathChangeChange(changes, model, old)) {
+        return;
+      }
+//      createUpdateChange();
     }
     pushChanges(changes);
   }
@@ -269,17 +272,17 @@ public class OrderedReportsSubscriptionHelper implements FlowableOnSubscribe<Dat
     changes.add(change);
   }
 
-  private void createPathChangeChange(List<DataQueryDataChange> changes, Report model, Report old) {
+  private boolean createPathChangeChange(List<DataQueryDataChange> changes, Report model, Report old) {
     boolean changed =
         old.getStudent().getName() != null
             && model.getStudent().getName() != null
             && old.getStudent().getName().compareTo(model.getStudent().getName()) != 0;
     if (!(changed)) {
-      return;
+      return false;
     }
     Row row = output.get(model.getId());
     if (row == null) {
-      return;
+      return false;
     }
     String _orderBy0 = model.getStudent().getName();
     long index = this.output.getPath(_orderBy0);
@@ -287,6 +290,7 @@ public class OrderedReportsSubscriptionHelper implements FlowableOnSubscribe<Dat
     this.output.orderByList.stream()
         .filter((one) -> one.row.equals(row))
         .forEach((one) -> one.update(_orderBy0));
+    return true;
   }
 
   private void createPathChangeChange(List<DataQueryDataChange> changes, Row row, long index) {
@@ -295,6 +299,7 @@ public class OrderedReportsSubscriptionHelper implements FlowableOnSubscribe<Dat
     change.oldPath = row.path;
     change.index = ((int) index);
     change.path = Long.toString(index);
+    change.nativeData = ListExt.asList(row.row);
     changes.add(change);
   }
 
@@ -414,9 +419,9 @@ public class OrderedReportsSubscriptionHelper implements FlowableOnSubscribe<Dat
         this.output.orderByList.stream()
             .filter((one) -> one.row.equals(r))
             .collect(Collectors.toList());
-    boolean changed = Objects.equals(base.getString(0), base.getString(0));
+    boolean changed = Objects.equals(student.getName(), student.getOld().getName());
     if (changed) {
-      String _orderBy0 = base.getString(0);
+      String _orderBy0 = student.getName();
       List<DataQueryDataChange> changes = ListExt.List();
       orderBys.forEach(
           (one) -> {

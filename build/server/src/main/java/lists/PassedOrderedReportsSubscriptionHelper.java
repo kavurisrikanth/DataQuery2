@@ -258,14 +258,10 @@ public class PassedOrderedReportsSubscriptionHelper
         return;
       }
       if (oldMatch) {
-        createUpdateChange(changes, model);
-      } else {
-        if (oldMatch) {
-          createDeleteChange(changes, model);
-        }
-        if (currentMatch) {
-          createInsertChange(changes, model);
-        }
+        createDeleteChange(changes, model);
+      }
+      if (currentMatch) {
+        createInsertChange(changes, model);
       }
     }
     pushChanges(changes);
@@ -462,9 +458,9 @@ public class PassedOrderedReportsSubscriptionHelper
         this.output.orderByList.stream()
             .filter((one) -> one.row.equals(r))
             .collect(Collectors.toList());
-    boolean changed = Objects.equals(base.getString(1), base.getString(1));
+    boolean changed = Objects.equals(student.getName(), student.getOld().getName());
     if (changed) {
-      String _orderBy0 = base.getString(1);
+      String _orderBy0 = student.getName();
       List<DataQueryDataChange> changes = ListExt.List();
       orderBys.forEach(
           (one) -> {
