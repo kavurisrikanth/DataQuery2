@@ -240,7 +240,7 @@ public class OrderedReportsSubscriptionHelper implements FlowableOnSubscribe<Dat
       if (createPathChangeChange(changes, model, old)) {
         return;
       }
-//      createUpdateChange();
+      createUpdateChange(changes, model);
     }
     pushChanges(changes);
   }
@@ -252,6 +252,19 @@ public class OrderedReportsSubscriptionHelper implements FlowableOnSubscribe<Dat
     long index = this.output.getPath(model.getStudent().getName());
     change.path = index == output.rows.size() ? "-1" : Long.toString(index);
     change.index = output.rows.size();
+    changes.add(change);
+  }
+
+  private void createUpdateChange(List<DataQueryDataChange> changes, Report model) {
+    Row row = output.get(model.getId());
+    if (row == null) {
+      return;
+    }
+    DataQueryDataChange change = new DataQueryDataChange();
+    change.changeType = SubscriptionChangeType.Update;
+    change.path = row.path;
+    change.index = row.index;
+    change.nativeData = ListExt.asList(row.row);
     changes.add(change);
   }
 
@@ -272,7 +285,8 @@ public class OrderedReportsSubscriptionHelper implements FlowableOnSubscribe<Dat
     changes.add(change);
   }
 
-  private boolean createPathChangeChange(List<DataQueryDataChange> changes, Report model, Report old) {
+  private boolean createPathChangeChange(
+      List<DataQueryDataChange> changes, Report model, Report old) {
     boolean changed =
         old.getStudent().getName() != null
             && model.getStudent().getName() != null

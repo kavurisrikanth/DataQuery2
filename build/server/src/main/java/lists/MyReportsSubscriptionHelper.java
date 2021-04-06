@@ -186,6 +186,10 @@ public class MyReportsSubscriptionHelper implements FlowableOnSubscribe<DataQuer
       boolean currentMatch = applyWhere(model);
       boolean oldMatch = applyWhere(old);
       if (currentMatch == oldMatch) {
+        if (!(currentMatch) && !(oldMatch)) {
+          return;
+        }
+        createUpdateChange(changes, model);
         return;
       }
       if (oldMatch) {
@@ -325,21 +329,6 @@ public class MyReportsSubscriptionHelper implements FlowableOnSubscribe<DataQuer
         }
       case Update:
         {
-          break;
-        }
-      case PathChange:
-        {
-          String oldPath = change.oldPath;
-          String newPath = change.path;
-          if (oldPath == null || newPath == null) {
-            return;
-          }
-          NativeObj obj = change.nativeData.get(0);
-          Row row = output.rows.get(obj.getId());
-          if (!(Objects.equals(row.path, oldPath))) {
-            return;
-          }
-          row.path = newPath;
           break;
         }
       default:

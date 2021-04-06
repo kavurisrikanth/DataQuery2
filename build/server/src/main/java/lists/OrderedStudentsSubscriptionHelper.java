@@ -210,7 +210,10 @@ public class OrderedStudentsSubscriptionHelper implements FlowableOnSubscribe<Da
       if (old == null) {
         return;
       }
-      createPathChangeChange(changes, model, old);
+      if (createPathChangeChange(changes, model, old)) {
+        return;
+      }
+      createUpdateChange(changes, model);
     }
     pushChanges(changes);
   }
@@ -222,6 +225,19 @@ public class OrderedStudentsSubscriptionHelper implements FlowableOnSubscribe<Da
     long index = this.output.getPath(model.getName());
     change.path = index == output.rows.size() ? "-1" : Long.toString(index);
     change.index = output.rows.size();
+    changes.add(change);
+  }
+
+  private void createUpdateChange(List<DataQueryDataChange> changes, Student model) {
+    Row row = output.get(model.getId());
+    if (row == null) {
+      return;
+    }
+    DataQueryDataChange change = new DataQueryDataChange();
+    change.changeType = SubscriptionChangeType.Update;
+    change.path = row.path;
+    change.index = row.index;
+    change.nativeData = ListExt.asList(row.row);
     changes.add(change);
   }
 
@@ -238,18 +254,18 @@ public class OrderedStudentsSubscriptionHelper implements FlowableOnSubscribe<Da
     changes.add(change);
   }
 
-  private void createPathChangeChange(
+  private boolean createPathChangeChange(
       List<DataQueryDataChange> changes, Student model, Student old) {
     boolean changed =
         old.getName() != null
             && model.getName() != null
             && old.getName().compareTo(model.getName()) != 0;
     if (!(changed)) {
-      return;
+      return false;
     }
     Row row = output.get(model.getId());
     if (row == null) {
-      return;
+      return false;
     }
     String _orderBy0 = model.getName();
     long index = this.output.getPath(_orderBy0);
@@ -257,6 +273,7 @@ public class OrderedStudentsSubscriptionHelper implements FlowableOnSubscribe<Da
     this.output.orderByList.stream()
         .filter((one) -> one.row.equals(row))
         .forEach((one) -> one.update(_orderBy0));
+    return true;
   }
 
   private void createPathChangeChange(List<DataQueryDataChange> changes, Row row, long index) {
@@ -265,6 +282,7 @@ public class OrderedStudentsSubscriptionHelper implements FlowableOnSubscribe<Da
     change.oldPath = row.path;
     change.index = ((int) index);
     change.path = Long.toString(index);
+    change.nativeData = ListExt.asList(row.row);
     changes.add(change);
   }
 

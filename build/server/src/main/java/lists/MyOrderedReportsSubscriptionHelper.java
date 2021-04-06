@@ -253,9 +253,10 @@ public class MyOrderedReportsSubscriptionHelper
         if (!(currentMatch) && !(oldMatch)) {
           return;
         }
-        if (currentMatch && oldMatch) {
-          createPathChangeChange(changes, model, old);
+        if (createPathChangeChange(changes, model, old)) {
+          return;
         }
+        createUpdateChange(changes, model);
         return;
       }
       if (oldMatch) {
@@ -312,17 +313,18 @@ public class MyOrderedReportsSubscriptionHelper
     changes.add(change);
   }
 
-  private void createPathChangeChange(List<DataQueryDataChange> changes, Report model, Report old) {
+  private boolean createPathChangeChange(
+      List<DataQueryDataChange> changes, Report model, Report old) {
     boolean changed =
         old.getStudent().getName() != null
             && model.getStudent().getName() != null
             && old.getStudent().getName().compareTo(model.getStudent().getName()) != 0;
     if (!(changed)) {
-      return;
+      return false;
     }
     Row row = output.get(model.getId());
     if (row == null) {
-      return;
+      return false;
     }
     String _orderBy0 = model.getStudent().getName();
     long index = this.output.getPath(_orderBy0);
@@ -330,6 +332,7 @@ public class MyOrderedReportsSubscriptionHelper
     this.output.orderByList.stream()
         .filter((one) -> one.row.equals(row))
         .forEach((one) -> one.update(_orderBy0));
+    return true;
   }
 
   private void createPathChangeChange(List<DataQueryDataChange> changes, Row row, long index) {
@@ -338,14 +341,13 @@ public class MyOrderedReportsSubscriptionHelper
     change.oldPath = row.path;
     change.index = ((int) index);
     change.path = Long.toString(index);
+    change.nativeData = ListExt.asList(row.row);
     changes.add(change);
   }
 
   private List<NativeObj> createReportData(Report report) {
     List<NativeObj> data = ListExt.List();
     NativeObj row = new NativeObj(3);
-    row.set(0, report.getStudent().getName());
-    row.set(1, report.getStudent().getId());
     row.set(0, report.getStudent().getName());
     row.set(1, report.getStudent().getId());
     row.set(2, report.getId());

@@ -15,7 +15,6 @@ import io.reactivex.rxjava3.core.FlowableOnSubscribe;
 import io.reactivex.rxjava3.disposables.Disposable;
 import java.util.List;
 import java.util.Map;
-import java.util.Objects;
 import models.AnonymousUser;
 import models.Student;
 import models.User;
@@ -152,6 +151,15 @@ public class AllStudentsSubscriptionHelper implements FlowableOnSubscribe<DataQu
       Existing data is deleted
       */
       createDeleteChange(changes, model);
+    } else {
+      /*
+      Existing data is updated
+      */
+      Student old = model.getOld();
+      if (old == null) {
+        return;
+      }
+      createUpdateChange(changes, model);
     }
     pushChanges(changes);
   }
@@ -162,6 +170,19 @@ public class AllStudentsSubscriptionHelper implements FlowableOnSubscribe<DataQu
     change.changeType = SubscriptionChangeType.Insert;
     change.path = "-1";
     change.index = output.rows.size();
+    changes.add(change);
+  }
+
+  private void createUpdateChange(List<DataQueryDataChange> changes, Student model) {
+    Row row = output.get(model.getId());
+    if (row == null) {
+      return;
+    }
+    DataQueryDataChange change = new DataQueryDataChange();
+    change.changeType = SubscriptionChangeType.Update;
+    change.path = row.path;
+    change.index = row.index;
+    change.nativeData = ListExt.asList(row.row);
     changes.add(change);
   }
 
@@ -215,21 +236,6 @@ public class AllStudentsSubscriptionHelper implements FlowableOnSubscribe<DataQu
         }
       case Update:
         {
-          break;
-        }
-      case PathChange:
-        {
-          String oldPath = change.oldPath;
-          String newPath = change.path;
-          if (oldPath == null || newPath == null) {
-            return;
-          }
-          NativeObj obj = change.nativeData.get(0);
-          Row row = output.rows.get(obj.getId());
-          if (!(Objects.equals(row.path, oldPath))) {
-            return;
-          }
-          row.path = newPath;
           break;
         }
       default:
