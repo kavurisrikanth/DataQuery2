@@ -1,8 +1,6 @@
 package helpers;
 
 import d3e.core.D3EResourceHandler;
-import d3e.core.DFile;
-import graphql.input.EmailMessageEntityInput;
 import java.util.stream.Collectors;
 import models.EmailMessage;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -10,82 +8,14 @@ import org.springframework.stereotype.Service;
 import repository.jpa.DFileRepository;
 import rest.GraphQLInputContext;
 import store.EntityValidationContext;
-import store.InputHelper;
 
 @Service("EmailMessage")
-public class EmailMessageEntityHelper<T extends EmailMessage, I extends EmailMessageEntityInput>
-    extends D3EMessageEntityHelper<T, I> {
+public class EmailMessageEntityHelper<T extends EmailMessage> extends D3EMessageEntityHelper<T> {
   @Autowired private DFileRepository dFileRepository;
   @Autowired private D3EResourceHandler resourceHandler;
 
   public EmailMessage newInstance() {
     return new EmailMessage();
-  }
-
-  @Override
-  public T fromInput(I input, InputHelper helper) {
-    if (input == null) {
-      return null;
-    }
-    T newEmailMessage = ((T) new EmailMessage());
-    newEmailMessage.setId(input.getId());
-    return fromInput(input, newEmailMessage, helper);
-  }
-
-  @Override
-  public T fromInput(I input, T entity, InputHelper helper) {
-    if (helper.has("from")) {
-      entity.setFrom(input.from);
-    }
-    if (helper.has("to")) {
-      entity.setTo(input.to.stream().collect(Collectors.toList()));
-    }
-    if (helper.has("body")) {
-      entity.setBody(input.body);
-    }
-    if (helper.has("createdOn")) {
-      entity.setCreatedOn(input.createdOn);
-    }
-    if (helper.has("bcc")) {
-      entity.setBcc(input.bcc.stream().collect(Collectors.toList()));
-    }
-    if (helper.has("cc")) {
-      entity.setCc(input.cc.stream().collect(Collectors.toList()));
-    }
-    if (helper.has("subject")) {
-      entity.setSubject(input.subject);
-    }
-    if (helper.has("html")) {
-      entity.setHtml(input.html);
-    }
-    if (helper.has("inlineAttachments")) {
-      entity.setInlineAttachments(
-          input.inlineAttachments.stream()
-              .map(
-                  (one) -> {
-                    DFile existing = dFileRepository.findById(one.getId()).orElse(null);
-                    if (existing == null) {
-                      existing = helper.readDFile(one, "inlineAttachments");
-                    }
-                    return existing;
-                  })
-              .collect(Collectors.toList()));
-    }
-    if (helper.has("attachments")) {
-      entity.setAttachments(
-          input.attachments.stream()
-              .map(
-                  (one) -> {
-                    DFile existing = dFileRepository.findById(one.getId()).orElse(null);
-                    if (existing == null) {
-                      existing = helper.readDFile(one, "attachments");
-                    }
-                    return existing;
-                  })
-              .collect(Collectors.toList()));
-    }
-    entity.updateMasters((o) -> {});
-    return entity;
   }
 
   @Override
@@ -121,20 +51,6 @@ public class EmailMessageEntityHelper<T extends EmailMessage, I extends EmailMes
       entity.setAttachments(ctx.readDFileColl("attachments"));
     }
     entity.updateMasters((o) -> {});
-  }
-
-  public EmailMessageEntityInput toInput(T entity) {
-    I input = ((I) new EmailMessageEntityInput());
-    input.setId(entity.getId());
-    input.from = entity.getFrom();
-    input.to = entity.getTo().stream().collect(java.util.stream.Collectors.toList());
-    input.body = entity.getBody();
-    input.createdOn = entity.getCreatedOn();
-    input.bcc = entity.getBcc().stream().collect(java.util.stream.Collectors.toList());
-    input.cc = entity.getCc().stream().collect(java.util.stream.Collectors.toList());
-    input.subject = entity.getSubject();
-    input.html = entity.isHtml();
-    return input;
   }
 
   public void referenceFromValidations(T entity, EntityValidationContext validationContext) {}

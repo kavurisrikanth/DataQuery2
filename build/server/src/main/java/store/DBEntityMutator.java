@@ -133,7 +133,7 @@ public class DBEntityMutator implements EntityMutator {
 
 	@Override
 	public void preUpdate(DatabaseObject entity) {
-		EntityHelper<DatabaseObject, ?> helper = (EntityHelper<DatabaseObject, ?>) getHelper(
+		EntityHelper<DatabaseObject> helper = (EntityHelper<DatabaseObject>) getHelper(
 				Hibernate.getClass(entity).getSimpleName());
 		if (helper != null) {
 			Context ctx = getContext();
@@ -173,7 +173,7 @@ public class DBEntityMutator implements EntityMutator {
 	@Override
 	public void preDelete(DatabaseObject entity) {
 		entity.setDeleted(true);
-		EntityHelper<DatabaseObject, ?> helper = (EntityHelper<DatabaseObject, ?>) getHelper(
+		EntityHelper<DatabaseObject> helper = (EntityHelper<DatabaseObject>) getHelper(
 				Hibernate.getClass(entity).getSimpleName());
 		Context ctx = getContext();
 		if (helper != null) {
@@ -291,12 +291,12 @@ public class DBEntityMutator implements EntityMutator {
 		}
 	}
 
-	public <T extends DatabaseObject, I extends IEntityInput, H extends EntityHelper<T, I>> H getHelper(
+	public <T extends DatabaseObject, H extends EntityHelper<T>> H getHelper(
 			String fullType) {
 		return (H) this.helperService.getObject().get(fullType);
 	}
 
-	public <T extends DatabaseObject, I extends IEntityInput, H extends EntityHelper<T, I>> H getHelperByInstance(
+	public <T extends DatabaseObject, H extends EntityHelper<T>> H getHelperByInstance(
 			Object fullType) {
 		return (H) this.helperService.getObject().get(Hibernate.getClass(fullType).getSimpleName());
 	}

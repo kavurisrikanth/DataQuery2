@@ -1,13 +1,11 @@
 package store;
 
-import java.util.List;
-import java.util.Objects;
 import java.util.function.Supplier;
 
 import rest.GraphQLInputContext;
 import rest.IDocumentReader;
 
-public interface EntityHelper<T extends Object, I extends IEntityInput> {
+public interface EntityHelper<T extends Object> {
 
 	void setDefaults(T entity);
 
@@ -25,10 +23,6 @@ public interface EntityHelper<T extends Object, I extends IEntityInput> {
 
 	T clone(T entity);
 
-	T fromInput(I input, InputHelper helper);
-
-	T fromInput(I input, T entity, InputHelper helper);
-	
 	void fromInput(T entity, GraphQLInputContext ctx);
 	
 	default void toJson(T entity, IDocumentReader r) {}

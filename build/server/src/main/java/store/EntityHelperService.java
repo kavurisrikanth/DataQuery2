@@ -11,7 +11,7 @@ import classes.ClassUtils;
 public class EntityHelperService implements org.springframework.beans.factory.InitializingBean {
 
 	@Autowired
-	private Map<String, EntityHelper<?, ? extends IEntityInput>> entityHelpers;
+	private Map<String, EntityHelper<?>> entityHelpers;
 
 	private static EntityHelperService instance;
 
@@ -24,19 +24,19 @@ public class EntityHelperService implements org.springframework.beans.factory.In
 		return instance;
 	}
 
-	public void setEntityHelpers(Map<String, EntityHelper<?, ? extends IEntityInput>> entityHelpers) {
+	public void setEntityHelpers(Map<String, EntityHelper<?>> entityHelpers) {
 		this.entityHelpers = entityHelpers;
 	}
 
-	public EntityHelper<?, ? extends IEntityInput> get(String name) {
+	public EntityHelper<?> get(String name) {
 		return entityHelpers.get(name);
 	}
 
-	public EntityHelper<?, ? extends IEntityInput> getByObject(Object obj) {
+	public EntityHelper<?> getByObject(Object obj) {
 		return entityHelpers.get(ClassUtils.getClass(obj).getSimpleName());
 	}
 
-	public void set(String name, EntityHelper<?, ? extends IEntityInput> helper) {
+	public void set(String name, EntityHelper<?> helper) {
 		entityHelpers.put(name, helper);
 	}
 }

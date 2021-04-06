@@ -1,6 +1,5 @@
 package helpers;
 
-import graphql.input.ReportConfigOptionEntityInput;
 import models.ReportConfigOption;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
@@ -10,12 +9,10 @@ import rest.GraphQLInputContext;
 import store.EntityHelper;
 import store.EntityMutator;
 import store.EntityValidationContext;
-import store.InputHelper;
 
 @Service("ReportConfigOption")
-public class ReportConfigOptionEntityHelper<
-        T extends ReportConfigOption, I extends ReportConfigOptionEntityInput>
-    implements EntityHelper<T, I> {
+public class ReportConfigOptionEntityHelper<T extends ReportConfigOption>
+    implements EntityHelper<T> {
   @Autowired protected EntityMutator mutator;
   @Autowired private ReportConfigOptionRepository reportConfigOptionRepository;
   @Autowired private ReportConfigRepository reportConfigRepository;
@@ -29,27 +26,6 @@ public class ReportConfigOptionEntityHelper<
   }
 
   @Override
-  public T fromInput(I input, InputHelper helper) {
-    if (input == null) {
-      return null;
-    }
-    T newReportConfigOption = ((T) new ReportConfigOption());
-    newReportConfigOption.setId(input.getId());
-    return fromInput(input, newReportConfigOption, helper);
-  }
-
-  @Override
-  public T fromInput(I input, T entity, InputHelper helper) {
-    if (helper.has("identity")) {
-      entity.setIdentity(input.identity);
-    }
-    if (helper.has("value")) {
-      entity.setValue(input.value);
-    }
-    return entity;
-  }
-
-  @Override
   public void fromInput(T entity, GraphQLInputContext ctx) {
     if (ctx.has("identity")) {
       entity.setIdentity(ctx.readString("identity"));
@@ -57,14 +33,6 @@ public class ReportConfigOptionEntityHelper<
     if (ctx.has("value")) {
       entity.setValue(ctx.readString("value"));
     }
-  }
-
-  public ReportConfigOptionEntityInput toInput(T entity) {
-    I input = ((I) new ReportConfigOptionEntityInput());
-    input.setId(entity.getId());
-    input.identity = entity.getIdentity();
-    input.value = entity.getValue();
-    return input;
   }
 
   public void referenceFromValidations(T entity, EntityValidationContext validationContext) {}

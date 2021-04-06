@@ -2,9 +2,7 @@ package helpers;
 
 import d3e.core.D3EResourceHandler;
 import d3e.core.ListExt;
-import graphql.input.AvatarEntityInput;
 import models.Avatar;
-import models.D3EImage;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import repository.jpa.AvatarRepository;
@@ -12,11 +10,9 @@ import rest.GraphQLInputContext;
 import store.EntityHelper;
 import store.EntityMutator;
 import store.EntityValidationContext;
-import store.InputHelper;
 
 @Service("Avatar")
-public class AvatarEntityHelper<T extends Avatar, I extends AvatarEntityInput>
-    implements EntityHelper<T, I> {
+public class AvatarEntityHelper<T extends Avatar> implements EntityHelper<T> {
   @Autowired protected EntityMutator mutator;
   @Autowired private AvatarRepository avatarRepository;
   @Autowired private D3EResourceHandler resourceHandler;
@@ -30,27 +26,6 @@ public class AvatarEntityHelper<T extends Avatar, I extends AvatarEntityInput>
   }
 
   @Override
-  public T fromInput(I input, InputHelper helper) {
-    if (input == null) {
-      return null;
-    }
-    T newAvatar = ((T) new Avatar());
-    newAvatar.setId(input.getId());
-    return fromInput(input, newAvatar, helper);
-  }
-
-  @Override
-  public T fromInput(I input, T entity, InputHelper helper) {
-    if (helper.has("image")) {
-      helper.readEmbedded(entity.getImage(), input.image, "image");
-    }
-    if (helper.has("createFrom")) {
-      entity.setCreateFrom(input.createFrom);
-    }
-    return entity;
-  }
-
-  @Override
   public void fromInput(T entity, GraphQLInputContext ctx) {
     if (ctx.has("image")) {
       entity.setImage(ctx.readEmbedded("image", "D3EImage", entity.getImage()));
@@ -58,17 +33,6 @@ public class AvatarEntityHelper<T extends Avatar, I extends AvatarEntityInput>
     if (ctx.has("createFrom")) {
       entity.setCreateFrom(ctx.readString("createFrom"));
     }
-  }
-
-  public AvatarEntityInput toInput(T entity) {
-    I input = ((I) new AvatarEntityInput());
-    input.setId(entity.getId());
-    {
-      D3EImageEntityHelper helper = mutator.getHelperByInstance(entity.getImage());
-      input.image = helper.toInput(entity.getImage());
-    }
-    input.createFrom = entity.getCreateFrom();
-    return input;
   }
 
   public void referenceFromValidations(T entity, EntityValidationContext validationContext) {}

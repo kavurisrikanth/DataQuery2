@@ -1,40 +1,18 @@
 package helpers;
 
-import graphql.input.AnonymousUserEntityInput;
 import models.AnonymousUser;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import repository.jpa.AnonymousUserRepository;
 import rest.GraphQLInputContext;
 import store.EntityValidationContext;
-import store.InputHelper;
 
 @Service("AnonymousUser")
-public class AnonymousUserEntityHelper<T extends AnonymousUser, I extends AnonymousUserEntityInput>
-    extends UserEntityHelper<T, I> {
+public class AnonymousUserEntityHelper<T extends AnonymousUser> extends UserEntityHelper<T> {
   @Autowired private AnonymousUserRepository anonymousUserRepository;
 
   public AnonymousUser newInstance() {
     return new AnonymousUser();
-  }
-
-  @Override
-  public T fromInput(I input, InputHelper helper) {
-    if (input == null) {
-      return null;
-    }
-    T newAnonymousUser = ((T) new AnonymousUser());
-    newAnonymousUser.setId(input.getId());
-    return fromInput(input, newAnonymousUser, helper);
-  }
-
-  @Override
-  public T fromInput(I input, T entity, InputHelper helper) {
-    if (helper.has("isActive")) {
-      entity.setIsActive(input.isActive);
-    }
-    entity.updateMasters((o) -> {});
-    return entity;
   }
 
   @Override
@@ -43,13 +21,6 @@ public class AnonymousUserEntityHelper<T extends AnonymousUser, I extends Anonym
       entity.setIsActive(ctx.readBoolean("isActive"));
     }
     entity.updateMasters((o) -> {});
-  }
-
-  public AnonymousUserEntityInput toInput(T entity) {
-    I input = ((I) new AnonymousUserEntityInput());
-    input.setId(entity.getId());
-    input.isActive = entity.isIsActive();
-    return input;
   }
 
   public void referenceFromValidations(T entity, EntityValidationContext validationContext) {}

@@ -1,12 +1,8 @@
 package security;
 
-import graphql.schema.DataFetchingEnvironment;
-import graphql.servlet.GraphQLContext;
 import java.util.Collections;
-import java.util.List;
 import models.AnonymousUser;
 import models.User;
-import org.apache.tomcat.websocket.WsSession;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.Authentication;
@@ -25,19 +21,6 @@ public class AppSessionProvider {
     UserProxy user = getCurrentUserProxy();
     if (user == null) return new AnonymousUser();
     return null;
-  }
-
-  public void set(DataFetchingEnvironment env) {
-    if (env == null) {
-      return;
-    }
-    WsSession session = ((WsSession) ((GraphQLContext) env.getContext()).getSession().get());
-    List<String> list = session.getRequestParameterMap().get("token");
-    if (list == null || list.isEmpty()) {
-      return;
-    }
-    String token = list.get(0);
-    setToken(token);
   }
 
   public void setToken(String token) {

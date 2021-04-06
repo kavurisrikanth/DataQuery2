@@ -1,6 +1,5 @@
 package helpers;
 
-import graphql.input.UserEntityInput;
 import models.OneTimePassword;
 import models.User;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -11,11 +10,9 @@ import rest.GraphQLInputContext;
 import store.EntityHelper;
 import store.EntityMutator;
 import store.EntityValidationContext;
-import store.InputHelper;
 
 @Service("User")
-public class UserEntityHelper<T extends User, I extends UserEntityInput>
-    implements EntityHelper<T, I> {
+public class UserEntityHelper<T extends User> implements EntityHelper<T> {
   @Autowired protected EntityMutator mutator;
   @Autowired private UserRepository userRepository;
   @Autowired private OneTimePasswordRepository oneTimePasswordRepository;
@@ -25,29 +22,11 @@ public class UserEntityHelper<T extends User, I extends UserEntityInput>
   }
 
   @Override
-  public T fromInput(I input, InputHelper helper) {
-    return null;
-  }
-
-  @Override
-  public T fromInput(I input, T entity, InputHelper helper) {
-    if (helper.has("isActive")) {
-      entity.setIsActive(input.isActive);
-    }
-    entity.updateMasters((o) -> {});
-    return entity;
-  }
-
-  @Override
   public void fromInput(T entity, GraphQLInputContext ctx) {
     if (ctx.has("isActive")) {
       entity.setIsActive(ctx.readBoolean("isActive"));
     }
     entity.updateMasters((o) -> {});
-  }
-
-  public UserEntityInput toInput(T entity) {
-    return null;
   }
 
   public void referenceFromValidations(T entity, EntityValidationContext validationContext) {}

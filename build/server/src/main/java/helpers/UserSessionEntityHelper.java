@@ -1,6 +1,5 @@
 package helpers;
 
-import graphql.input.UserSessionEntityInput;
 import models.UserSession;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
@@ -9,11 +8,9 @@ import rest.GraphQLInputContext;
 import store.EntityHelper;
 import store.EntityMutator;
 import store.EntityValidationContext;
-import store.InputHelper;
 
 @Service("UserSession")
-public class UserSessionEntityHelper<T extends UserSession, I extends UserSessionEntityInput>
-    implements EntityHelper<T, I> {
+public class UserSessionEntityHelper<T extends UserSession> implements EntityHelper<T> {
   @Autowired protected EntityMutator mutator;
   @Autowired private UserSessionRepository userSessionRepository;
 
@@ -22,29 +19,11 @@ public class UserSessionEntityHelper<T extends UserSession, I extends UserSessio
   }
 
   @Override
-  public T fromInput(I input, InputHelper helper) {
-    return null;
-  }
-
-  @Override
-  public T fromInput(I input, T entity, InputHelper helper) {
-    if (helper.has("userSessionId")) {
-      entity.setUserSessionId(input.userSessionId);
-    }
-    entity.updateMasters((o) -> {});
-    return entity;
-  }
-
-  @Override
   public void fromInput(T entity, GraphQLInputContext ctx) {
     if (ctx.has("userSessionId")) {
       entity.setUserSessionId(ctx.readString("userSessionId"));
     }
     entity.updateMasters((o) -> {});
-  }
-
-  public UserSessionEntityInput toInput(T entity) {
-    return null;
   }
 
   public void referenceFromValidations(T entity, EntityValidationContext validationContext) {}

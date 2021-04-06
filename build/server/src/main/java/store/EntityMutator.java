@@ -16,17 +16,15 @@ public interface EntityMutator {
 
 	public <T extends DatabaseObject> void peformDeleteOrphan(Collection<T> oldList, Collection<T> newList);
 
-	public <T extends DatabaseObject, I extends IEntityInput, H extends EntityHelper<T, I>> H getHelper(
-			String fullType);
+	public <T extends DatabaseObject, H extends EntityHelper<T>> H getHelper(String fullType);
 
-	public <T extends DatabaseObject, I extends IEntityInput, H extends EntityHelper<T, I>> H getHelperByInstance(
-			Object fullType);
+	public <T extends DatabaseObject, H extends EntityHelper<T>> H getHelperByInstance(Object fullType);
 
 	public void processOnLoad(Object entity);
-	
-    public void preUpdate(DatabaseObject obj);
-    
-    public void preDelete(DatabaseObject obj);
+
+	public void preUpdate(DatabaseObject obj);
+
+	public void preDelete(DatabaseObject obj);
 
 	public void markDirty(DatabaseObject obj);
 

@@ -1,46 +1,14 @@
 package helpers;
 
-import graphql.input.SMSMessageEntityInput;
-import java.util.stream.Collectors;
 import models.SMSMessage;
 import org.springframework.stereotype.Service;
 import rest.GraphQLInputContext;
 import store.EntityValidationContext;
-import store.InputHelper;
 
 @Service("SMSMessage")
-public class SMSMessageEntityHelper<T extends SMSMessage, I extends SMSMessageEntityInput>
-    extends D3EMessageEntityHelper<T, I> {
+public class SMSMessageEntityHelper<T extends SMSMessage> extends D3EMessageEntityHelper<T> {
   public SMSMessage newInstance() {
     return new SMSMessage();
-  }
-
-  @Override
-  public T fromInput(I input, InputHelper helper) {
-    if (input == null) {
-      return null;
-    }
-    T newSMSMessage = ((T) new SMSMessage());
-    newSMSMessage.setId(input.getId());
-    return fromInput(input, newSMSMessage, helper);
-  }
-
-  @Override
-  public T fromInput(I input, T entity, InputHelper helper) {
-    if (helper.has("from")) {
-      entity.setFrom(input.from);
-    }
-    if (helper.has("to")) {
-      entity.setTo(input.to.stream().collect(Collectors.toList()));
-    }
-    if (helper.has("body")) {
-      entity.setBody(input.body);
-    }
-    if (helper.has("createdOn")) {
-      entity.setCreatedOn(input.createdOn);
-    }
-    entity.updateMasters((o) -> {});
-    return entity;
   }
 
   @Override
@@ -58,16 +26,6 @@ public class SMSMessageEntityHelper<T extends SMSMessage, I extends SMSMessageEn
       entity.setCreatedOn(ctx.readDateTime("createdOn"));
     }
     entity.updateMasters((o) -> {});
-  }
-
-  public SMSMessageEntityInput toInput(T entity) {
-    I input = ((I) new SMSMessageEntityInput());
-    input.setId(entity.getId());
-    input.from = entity.getFrom();
-    input.to = entity.getTo().stream().collect(java.util.stream.Collectors.toList());
-    input.body = entity.getBody();
-    input.createdOn = entity.getCreatedOn();
-    return input;
   }
 
   public void referenceFromValidations(T entity, EntityValidationContext validationContext) {}

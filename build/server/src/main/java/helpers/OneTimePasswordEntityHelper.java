@@ -1,6 +1,5 @@
 package helpers;
 
-import graphql.input.OneTimePasswordEntityInput;
 import models.OneTimePassword;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
@@ -9,12 +8,9 @@ import rest.GraphQLInputContext;
 import store.EntityHelper;
 import store.EntityMutator;
 import store.EntityValidationContext;
-import store.InputHelper;
 
 @Service("OneTimePassword")
-public class OneTimePasswordEntityHelper<
-        T extends OneTimePassword, I extends OneTimePasswordEntityInput>
-    implements EntityHelper<T, I> {
+public class OneTimePasswordEntityHelper<T extends OneTimePassword> implements EntityHelper<T> {
   @Autowired protected EntityMutator mutator;
   @Autowired private OneTimePasswordRepository oneTimePasswordRepository;
 
@@ -24,34 +20,6 @@ public class OneTimePasswordEntityHelper<
 
   public OneTimePassword newInstance() {
     return new OneTimePassword();
-  }
-
-  @Override
-  public T fromInput(I input, InputHelper helper) {
-    if (input == null) {
-      return null;
-    }
-    T newOneTimePassword = ((T) new OneTimePassword());
-    newOneTimePassword.setId(input.getId());
-    return fromInput(input, newOneTimePassword, helper);
-  }
-
-  @Override
-  public T fromInput(I input, T entity, InputHelper helper) {
-    if (helper.has("success")) {
-      entity.setSuccess(input.success);
-    }
-    if (helper.has("errorMsg")) {
-      entity.setErrorMsg(input.errorMsg);
-    }
-    if (helper.has("token")) {
-      entity.setToken(input.token);
-    }
-    if (helper.has("expiry")) {
-      entity.setExpiry(input.expiry);
-    }
-    entity.updateMasters((o) -> {});
-    return entity;
   }
 
   @Override
@@ -69,16 +37,6 @@ public class OneTimePasswordEntityHelper<
       entity.setExpiry(ctx.readDateTime("expiry"));
     }
     entity.updateMasters((o) -> {});
-  }
-
-  public OneTimePasswordEntityInput toInput(T entity) {
-    I input = ((I) new OneTimePasswordEntityInput());
-    input.setId(entity.getId());
-    input.success = entity.isSuccess();
-    input.errorMsg = entity.getErrorMsg();
-    input.token = entity.getToken();
-    input.expiry = entity.getExpiry();
-    return input;
   }
 
   public void referenceFromValidations(T entity, EntityValidationContext validationContext) {}

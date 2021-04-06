@@ -1,8 +1,5 @@
 package helpers;
 
-import d3e.core.IterableExt;
-import d3e.core.ListExt;
-import graphql.input.ReportConfigEntityInput;
 import models.ReportConfig;
 import models.ReportConfigOption;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -12,11 +9,9 @@ import rest.GraphQLInputContext;
 import store.EntityHelper;
 import store.EntityMutator;
 import store.EntityValidationContext;
-import store.InputHelper;
 
 @Service("ReportConfig")
-public class ReportConfigEntityHelper<T extends ReportConfig, I extends ReportConfigEntityInput>
-    implements EntityHelper<T, I> {
+public class ReportConfigEntityHelper<T extends ReportConfig> implements EntityHelper<T> {
   @Autowired protected EntityMutator mutator;
   @Autowired private ReportConfigRepository reportConfigRepository;
 
@@ -29,35 +24,6 @@ public class ReportConfigEntityHelper<T extends ReportConfig, I extends ReportCo
   }
 
   @Override
-  public T fromInput(I input, InputHelper helper) {
-    if (input == null) {
-      return null;
-    }
-    T newReportConfig = ((T) new ReportConfig());
-    newReportConfig.setId(input.getId());
-    return fromInput(input, newReportConfig, helper);
-  }
-
-  @Override
-  public T fromInput(I input, T entity, InputHelper helper) {
-    if (helper.has("identity")) {
-      entity.setIdentity(input.identity);
-    }
-    if (helper.has("values")) {
-      entity.setValues(
-          IterableExt.toList(
-              ListExt.map(
-                  input.values,
-                  (objId) -> {
-                    ReportConfigOptionEntityHelper valuesHelper =
-                        this.mutator.getHelper(objId._type());
-                    return ((ReportConfigOption) helper.readChild(objId, "values"));
-                  })));
-    }
-    return entity;
-  }
-
-  @Override
   public void fromInput(T entity, GraphQLInputContext ctx) {
     if (ctx.has("identity")) {
       entity.setIdentity(ctx.readString("identity"));
@@ -65,21 +31,6 @@ public class ReportConfigEntityHelper<T extends ReportConfig, I extends ReportCo
     if (ctx.has("values")) {
       entity.setValues(ctx.readChildColl("values", "ReportConfigOption"));
     }
-  }
-
-  public ReportConfigEntityInput toInput(T entity) {
-    I input = ((I) new ReportConfigEntityInput());
-    input.setId(entity.getId());
-    input.identity = entity.getIdentity();
-    input.values =
-        entity.getValues().stream()
-            .map(
-                (one) -> {
-                  ReportConfigOptionEntityHelper helper = mutator.getHelperByInstance(one);
-                  return helper.toInput(one);
-                })
-            .collect(java.util.stream.Collectors.toList());
-    return input;
   }
 
   public void referenceFromValidations(T entity, EntityValidationContext validationContext) {}

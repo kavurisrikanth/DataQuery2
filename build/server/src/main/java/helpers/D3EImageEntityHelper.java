@@ -1,7 +1,5 @@
 package helpers;
 
-import d3e.core.DFile;
-import graphql.input.D3EImageEntityInput;
 import models.D3EImage;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
@@ -11,11 +9,9 @@ import rest.GraphQLInputContext;
 import store.EntityHelper;
 import store.EntityMutator;
 import store.EntityValidationContext;
-import store.InputHelper;
 
 @Service("D3EImage")
-public class D3EImageEntityHelper<T extends D3EImage, I extends D3EImageEntityInput>
-    implements EntityHelper<T, I> {
+public class D3EImageEntityHelper<T extends D3EImage> implements EntityHelper<T> {
   @Autowired protected EntityMutator mutator;
   @Autowired private AvatarRepository avatarRepository;
   @Autowired private DFileRepository dFileRepository;
@@ -26,36 +22,6 @@ public class D3EImageEntityHelper<T extends D3EImage, I extends D3EImageEntityIn
 
   public D3EImage newInstance() {
     return new D3EImage();
-  }
-
-  @Override
-  public T fromInput(I input, InputHelper helper) {
-    if (input == null) {
-      return null;
-    }
-    T newD3EImage = ((T) new D3EImage());
-    return fromInput(input, newD3EImage, helper);
-  }
-
-  @Override
-  public T fromInput(I input, T entity, InputHelper helper) {
-    if (helper.has("size")) {
-      entity.setSize(input.size);
-    }
-    if (helper.has("width")) {
-      entity.setWidth(input.width);
-    }
-    if (helper.has("height")) {
-      entity.setHeight(input.height);
-    }
-    if (helper.has("file")) {
-      DFile existing = dFileRepository.findById(input.file.getId()).orElse(null);
-      if (existing == null) {
-        existing = helper.readDFile(input.file, "file");
-      }
-      entity.setFile(existing);
-    }
-    return entity;
   }
 
   @Override
@@ -72,14 +38,6 @@ public class D3EImageEntityHelper<T extends D3EImage, I extends D3EImageEntityIn
     if (ctx.has("file")) {
       entity.setFile(ctx.readDFile("file"));
     }
-  }
-
-  public D3EImageEntityInput toInput(T entity) {
-    I input = ((I) new D3EImageEntityInput());
-    input.size = entity.getSize();
-    input.width = entity.getWidth();
-    input.height = entity.getHeight();
-    return input;
   }
 
   public void referenceFromValidations(T entity, EntityValidationContext validationContext) {}

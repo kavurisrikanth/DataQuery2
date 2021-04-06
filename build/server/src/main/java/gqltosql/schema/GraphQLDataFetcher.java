@@ -8,6 +8,7 @@ import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
 
+import d3e.core.DFile;
 import graphql.language.Field;
 import graphql.language.InlineFragment;
 import graphql.language.Selection;
@@ -38,7 +39,31 @@ public class GraphQLDataFetcher implements IDataFetcher {
 		if (value == null) {
 			return JSONObject.NULL;
 		}
+		if (value instanceof DFile) {
+			return fetchDFile(field, (DFile) value);
+		}
 		return value;
+	}
+
+	private Object fetchDFile(Field field, DFile value) {
+		JSONObject res = new JSONObject();
+		for (Selection s : field.getSelectionSet().getSelections()) {
+			if (s instanceof Field) {
+				Field f = (Field) s;
+				try {
+					if (f.getName().equals("id")) {
+						res.put("id", value.getId());
+					} else if (f.getName().equals("name")) {
+						res.put("name", value.getName());
+					} else if (f.getName().equals("size")) {
+						res.put("size", value.getSize());
+					}
+				} catch (JSONException e) {
+					throw new RuntimeException(e);
+				}
+			}
+		}
+		return res;
 	}
 
 	@Override

@@ -1,6 +1,5 @@
 package helpers;
 
-import graphql.input.ReportEntityInput;
 import models.Report;
 import models.Student;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -10,11 +9,9 @@ import rest.GraphQLInputContext;
 import store.EntityHelper;
 import store.EntityMutator;
 import store.EntityValidationContext;
-import store.InputHelper;
 
 @Service("Report")
-public class ReportEntityHelper<T extends Report, I extends ReportEntityInput>
-    implements EntityHelper<T, I> {
+public class ReportEntityHelper<T extends Report> implements EntityHelper<T> {
   @Autowired protected EntityMutator mutator;
   @Autowired private ReportRepository reportRepository;
 
@@ -27,28 +24,6 @@ public class ReportEntityHelper<T extends Report, I extends ReportEntityInput>
   }
 
   @Override
-  public T fromInput(I input, InputHelper helper) {
-    if (input == null) {
-      return null;
-    }
-    T newReport = ((T) new Report());
-    newReport.setId(input.getId());
-    return fromInput(input, newReport, helper);
-  }
-
-  @Override
-  public T fromInput(I input, T entity, InputHelper helper) {
-    if (helper.has("marks")) {
-      entity.setMarks(input.marks);
-    }
-    if (helper.has("student")) {
-      entity.setStudent(helper.readRef("Student", input.student));
-    }
-    entity.updateMasters((o) -> {});
-    return entity;
-  }
-
-  @Override
   public void fromInput(T entity, GraphQLInputContext ctx) {
     if (ctx.has("marks")) {
       entity.setMarks(ctx.readDouble("marks"));
@@ -57,14 +32,6 @@ public class ReportEntityHelper<T extends Report, I extends ReportEntityInput>
       entity.setStudent(ctx.readRef("student", "Student"));
     }
     entity.updateMasters((o) -> {});
-  }
-
-  public ReportEntityInput toInput(T entity) {
-    I input = ((I) new ReportEntityInput());
-    input.setId(entity.getId());
-    input.marks = entity.getMarks();
-    input.student = entity.getStudent().getId();
-    return input;
   }
 
   public void referenceFromValidations(T entity, EntityValidationContext validationContext) {}

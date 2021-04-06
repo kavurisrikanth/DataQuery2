@@ -1,6 +1,5 @@
 package helpers;
 
-import graphql.input.StudentEntityInput;
 import models.Report;
 import models.Student;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -11,11 +10,9 @@ import rest.GraphQLInputContext;
 import store.EntityHelper;
 import store.EntityMutator;
 import store.EntityValidationContext;
-import store.InputHelper;
 
 @Service("Student")
-public class StudentEntityHelper<T extends Student, I extends StudentEntityInput>
-    implements EntityHelper<T, I> {
+public class StudentEntityHelper<T extends Student> implements EntityHelper<T> {
   @Autowired protected EntityMutator mutator;
   @Autowired private StudentRepository studentRepository;
   @Autowired private ReportRepository reportRepository;
@@ -29,37 +26,11 @@ public class StudentEntityHelper<T extends Student, I extends StudentEntityInput
   }
 
   @Override
-  public T fromInput(I input, InputHelper helper) {
-    if (input == null) {
-      return null;
-    }
-    T newStudent = ((T) new Student());
-    newStudent.setId(input.getId());
-    return fromInput(input, newStudent, helper);
-  }
-
-  @Override
-  public T fromInput(I input, T entity, InputHelper helper) {
-    if (helper.has("name")) {
-      entity.setName(input.name);
-    }
-    entity.updateMasters((o) -> {});
-    return entity;
-  }
-
-  @Override
   public void fromInput(T entity, GraphQLInputContext ctx) {
     if (ctx.has("name")) {
       entity.setName(ctx.readString("name"));
     }
     entity.updateMasters((o) -> {});
-  }
-
-  public StudentEntityInput toInput(T entity) {
-    I input = ((I) new StudentEntityInput());
-    input.setId(entity.getId());
-    input.name = entity.getName();
-    return input;
   }
 
   public void referenceFromValidations(T entity, EntityValidationContext validationContext) {}

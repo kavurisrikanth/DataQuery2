@@ -15,7 +15,6 @@ import d3e.core.ListExt;
 import store.DatabaseObject;
 import store.EntityHelper;
 import store.EntityHelperService;
-import store.IEntityInput;
 import store.ValidationFailedException;
 
 public abstract class GraphQLInputContext {
@@ -88,7 +87,7 @@ public abstract class GraphQLInputContext {
 		return (T) obj;
 	}
 
-	protected <T> T readRef(EntityHelper<T, ? extends IEntityInput> helper, long id) {
+	protected <T> T readRef(EntityHelper<T> helper, long id) {
 		if (id > 0) {
 			T obj = helper.getById(id);
 			if (obj == null) {
