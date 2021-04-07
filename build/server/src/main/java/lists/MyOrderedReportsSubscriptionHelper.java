@@ -253,17 +253,16 @@ public class MyOrderedReportsSubscriptionHelper
         if (!(currentMatch) && !(oldMatch)) {
           return;
         }
-        if (createPathChangeChange(changes, model, old)) {
-          return;
+        if (!(createPathChangeChange(changes, model, old))) {
+          createUpdateChange(changes, model);
         }
-        createUpdateChange(changes, model);
-        return;
-      }
-      if (oldMatch) {
-        createDeleteChange(changes, model);
-      }
-      if (currentMatch) {
-        createInsertChange(changes, model);
+      } else {
+        if (oldMatch) {
+          createDeleteChange(changes, model);
+        }
+        if (currentMatch) {
+          createInsertChange(changes, model);
+        }
       }
     }
     pushChanges(changes);

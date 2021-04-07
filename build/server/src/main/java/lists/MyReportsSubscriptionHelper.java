@@ -190,13 +190,13 @@ public class MyReportsSubscriptionHelper implements FlowableOnSubscribe<DataQuer
           return;
         }
         createUpdateChange(changes, model);
-        return;
-      }
-      if (oldMatch) {
-        createDeleteChange(changes, model);
-      }
-      if (currentMatch) {
-        createInsertChange(changes, model);
+      } else {
+        if (oldMatch) {
+          createDeleteChange(changes, model);
+        }
+        if (currentMatch) {
+          createInsertChange(changes, model);
+        }
       }
     }
     pushChanges(changes);

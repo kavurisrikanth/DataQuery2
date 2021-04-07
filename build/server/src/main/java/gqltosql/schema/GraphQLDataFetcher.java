@@ -19,9 +19,15 @@ import store.DatabaseObject;
 public class GraphQLDataFetcher implements IDataFetcher {
 
 	private IModelSchema schema;
+	private boolean needLocalId;
 
 	public GraphQLDataFetcher(IModelSchema schema) {
 		this.schema = schema;
+	}
+	
+	public GraphQLDataFetcher(IModelSchema schema, boolean needLocalId) {
+		this.schema = schema;
+		this.needLocalId = needLocalId;
 	}
 
 	public Object fetch(Field field, String type, Object value) {
@@ -99,7 +105,7 @@ public class GraphQLDataFetcher implements IDataFetcher {
 						res.put("__typename", value.getClass().getSimpleName());
 					} else if (f.getName().equals("localId")) {
 						DatabaseObject db = (DatabaseObject) value;
-						res.put("localId", db.getLocalId());
+						res.put("localId", needLocalId ? db.getLocalId() : 0l);
 					}
 				} catch (JSONException e) {
 					throw new RuntimeException(e);

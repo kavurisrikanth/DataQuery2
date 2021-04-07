@@ -210,10 +210,9 @@ public class OrderedStudentsSubscriptionHelper implements FlowableOnSubscribe<Da
       if (old == null) {
         return;
       }
-      if (createPathChangeChange(changes, model, old)) {
-        return;
+      if (!(createPathChangeChange(changes, model, old))) {
+        createUpdateChange(changes, model);
       }
-      createUpdateChange(changes, model);
     }
     pushChanges(changes);
   }

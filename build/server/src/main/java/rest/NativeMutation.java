@@ -89,7 +89,8 @@ public class NativeMutation extends AbstractQueryService {
     result.put("errors", new JSONArray());
     if (value != null) {
       result.put(
-          "value", new GraphQLDataFetcher(schema).fetch(inspect(field, "value"), type, value));
+          "value",
+          new GraphQLDataFetcher(schema, true).fetch(inspect(field, "value"), type, value));
     }
     return result;
   }
